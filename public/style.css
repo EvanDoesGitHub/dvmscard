@@ -237,10 +237,10 @@ body {
     top: 0;
 }
 
-/* Main container for the entire application (inventory + roller + empty right side) for the card game */
+/* Main container for the entire application (inventory + roller + balance) */
 .main-app-container {
     display: grid;
-    grid-template-columns: 1.2fr 1fr 0.8fr;
+    grid-template-columns: 1.2fr 1fr 0.8fr; /* Adjusted column widths */
     gap: 20px;
     max-width: 1300px;
     width: 100%;
@@ -250,7 +250,7 @@ body {
     margin: 20px auto;
 }
 
-/* Base style for all content sections (inventory, roller, future right section) */
+/* Base style for all content sections (inventory, roller, balance) */
 .content-section {
     background-color: var(--stake-medium-dark-bg);
     border-radius: 15px;
@@ -293,24 +293,32 @@ body {
 .inventory-list {
     width: 100%;
     flex-grow: 1;
-    max-height: calc(100% - 100px);
+    max-height: calc(100% - 100px); /* Adjust for sell all button */
     overflow-y: auto;
     padding-right: 10px;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 15px;
-    /* Changed to start from top-left */
-    justify-items: start; /* Align items to the start of their grid area */
+    justify-items: center; /* Center items within their grid cell */
     align-content: start; /* Align grid tracks to the start of the container */
     padding-bottom: 10px; /* Add some padding at the bottom for scrolling */
 }
 
 /* Style for when inventory is empty */
-.inventory-list.empty-state {
-    display: flex; /* Override grid to use flex for centering */
-    justify-content: center; /* Center horizontally */
-    align-items: center; /* Center vertically */
-    text-align: center; /* Ensure text inside is centered */
+.inventory-list .empty-inventory-message {
+    color: var(--stake-text-medium);
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+    width: 100%;
+    line-height: 1.6;
+    font-size: 0.95em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+    height: 100%;
+    margin: 0;
 }
 
 
@@ -330,23 +338,6 @@ body {
     background: var(--stake-green-secondary);
 }
 
-.empty-inventory-message {
-    color: var(--stake-text-medium);
-    font-style: italic;
-    text-align: center;
-    padding: 20px;
-    width: 100%;
-    line-height: 1.6;
-    font-size: 0.95em;
-    /* Ensure it takes full space to be centered by parent grid/flex */
-    display: flex; /* Already flex, but explicitly keeping it */
-    justify-content: center; /* Already centered, but explicitly keeping it */
-    align-items: center; /* Already centered, but explicitly keeping it */
-    flex-grow: 1;
-    height: 100%;
-    margin: 0;
-}
-
 .inventory-card {
     background-color: var(--stake-lighter-dark-bg);
     border-radius: 10px;
@@ -362,7 +353,7 @@ body {
     width: 100%;
     max-width: 110px; /* Max width for individual cards */
     height: 210px; /* Increased height to fit name, rarity, and price */
-    overflow: hidden;
+    overflow: hidden; /* Hide overflow if text is too long */
     position: relative;
     padding-bottom: 5px; /* Adjust padding to make space for text */
 }
@@ -372,7 +363,7 @@ body {
     box-shadow: 0 5px 12px var(--stake-border-glow-medium);
 }
 
-.inventory-card img {
+.inventory-card-image { /* Specific class for inventory card image */
     width: 90px;
     height: 126px;
     object-fit: cover;
@@ -381,39 +372,57 @@ body {
     margin-bottom: 5px;
 }
 
-.inventory-card p {
+.inventory-card-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    flex-grow: 1; /* Allow info to take remaining space */
+    justify-content: center; /* Center content vertically */
+}
+
+.inventory-card-info span {
     margin: 0;
     font-size: 0.7em;
     color: var(--stake-text-light);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
+    white-space: normal; /* Allow text to wrap */
+    word-wrap: break-word; /* Break long words */
+    overflow-wrap: break-word;
     text-align: center;
+    width: 100%; /* Ensure it takes full width */
+    padding: 0 2px; /* Small horizontal padding */
 }
 
-.inventory-card .card-title {
+.inventory-card-title {
     font-weight: 600;
     color: var(--stake-green-primary);
     font-size: 0.8em; /* Slightly larger for title */
     margin-bottom: 2px;
 }
 
-.inventory-card p:nth-of-type(2) { /* Rarity text */
+.inventory-card-rarity { /* Rarity text */
     font-size: 0.65em;
     color: var(--stake-text-medium);
     margin-bottom: 2px;
 }
 
-.inventory-card p:nth-of-type(3) { /* Value text */
+.inventory-card-value { /* Value text */
     font-size: 0.65em;
     font-weight: 500;
     color: var(--stake-text-light);
     margin-bottom: 5px; /* Space before button */
 }
 
+/* Rarity specific colors for inventory cards */
+.inventory-card-rarity.common { color: #a0a0a0; }
+.inventory-card-rarity.uncommon { color: #00e576; } /* Primary green */
+.inventory-card-rarity.rare { color: #00b0ff; } /* Blue */
+.inventory-card-rarity.epic { color: #9c27b0; } /* Purple */
+.inventory-card-rarity.legendary { color: #ffeb3b; } /* Yellow */
+
+
 /* Style for the duplicate card count (x2, x3, etc.) */
-.card-count {
+.card-count-overlay { /* Changed from card-count to avoid conflict with main card info */
     position: absolute;
     top: 5px;
     right: 5px;
@@ -425,36 +434,6 @@ body {
     font-weight: bold;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     z-index: 10;
-}
-
-/* Individual Sell Button for Inventory Cards */
-.inventory-card .sell-single-button {
-    background-color: rgba(0, 229, 118, 0.7);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 4px 8px;
-    font-size: 0.65em;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: auto;
-    width: calc(100% - 16px);
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-
-.inventory-card .sell-single-button:hover {
-    background-color: var(--stake-green-primary);
-    transform: translateY(-1px);
-}
-.inventory-card .sell-single-button:active {
-    transform: translateY(0);
-}
-
-
-/* Sell All Button positioning */
-#sell-all-button {
-    margin-top: auto;
 }
 
 
@@ -481,16 +460,7 @@ h1 { /* This is for the card game page */
     text-align: center;
 }
 
-#card-presentation {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 25px;
-    margin-bottom: 40px;
-    width: 100%;
-}
-
+/* Common style for all card display areas (initial, rolling, final) */
 .card-display-area {
     width: 220px;
     height: 308px;
@@ -504,44 +474,27 @@ h1 { /* This is for the card game page */
     position: relative;
     animation: glowing-border 3s infinite alternate ease-in-out;
     flex-shrink: 0;
+    margin-bottom: 25px; /* Space between card area and buttons */
 }
 
-.card-image {
+/* Image inside any card display area */
+.card-display-area .card-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
     border-radius: 15px;
-    transition: transform 0.1s ease-in-out, opacity 0.1s ease-in-out;
-    opacity: 0;
+    /* transition: transform 0.1s ease-in-out, opacity 0.1s ease-in-out; */ /* Removed for rolling animation */
+    opacity: 1; /* Ensure images are visible */
 }
 
-.card-image[src]:not([src=""]) {
-    opacity: 1;
+/* Specific styling for the rolling animation container */
+#rolling-card-animation .rolling-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 15px;
+    animation: rolling-animation 0.5s infinite linear; /* Apply animation directly */
 }
-
-
-/* Placeholder "Click Roll" text on initial card image */
-.card-display-area::before {
-    content: "Click Roll";
-    font-size: 1.6em;
-    color: var(--stake-text-light);
-    font-weight: bold;
-    text-align: center;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1;
-    pointer-events: none;
-    text-shadow: 0 0 10px var(--stake-text-glow);
-    transition: opacity 0.3s ease-in-out;
-}
-
-/* Hide "Click Roll" when the parent has the 'hide-placeholder' class */
-.card-display-area.hide-placeholder::before {
-    display: none;
-}
-
 
 /* Animation for rolling - enhanced */
 @keyframes rolling-animation {
@@ -550,47 +503,106 @@ h1 { /* This is for the card game page */
     100% { transform: scale(1) rotateY(360deg); opacity: 1; }
 }
 
-.card-image.rolling {
-    animation: rolling-animation 0.5s infinite linear;
+/* Rarity Ribbon */
+.rarity-ribbon {
+    position: absolute;
+    top: 10px;
+    left: -30px; /* Adjust to move outside initially */
+    width: 150px;
+    background-color: var(--stake-green-primary);
+    color: var(--stake-dark-blue-bg);
+    padding: 5px 10px;
+    font-size: 0.9em;
+    font-weight: bold;
+    text-align: center;
+    transform: rotate(-45deg);
+    transform-origin: 0% 0%;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+    z-index: 5;
+    text-transform: uppercase;
 }
 
-/* Animation for when the card lands */
-@keyframes card-land {
-    0% { transform: scale(0.8) translateY(-20px); opacity: 0; }
-    80% { transform: scale(1.05) translateY(5px); opacity: 1; }
-    100% { transform: scale(1) translateY(0); opacity: 1; }
+/* Rarity Ribbon Colors */
+.rarity-ribbon.common { background-color: #a0a0a0; }
+.rarity-ribbon.uncommon { background-color: var(--stake-green-primary); }
+.rarity-ribbon.rare { background-color: #00b0ff; }
+.rarity-ribbon.epic { background-color: #9c27b0; }
+.rarity-ribbon.legendary { background-color: #ffeb3b; color: var(--stake-dark-blue-bg); } /* Legendary text color */
+
+
+/* Card info for the main display */
+#card-display .card-info {
+    position: absolute; /* Position info over the image */
+    bottom: 0; /* Align to bottom */
+    left: 0;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
+    padding: 10px;
+    text-align: center;
+    color: var(--stake-text-light);
+    font-size: 0.9em;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
-.card-image.landed {
-    animation: card-land 0.5s ease-out forwards;
+#card-display .card-info h3 {
+    margin: 0;
+    font-size: 1.1em;
+    color: var(--stake-green-primary);
+    text-shadow: 0 0 5px var(--stake-border-glow-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+#card-display .card-info p {
+    margin: 0;
+    font-size: 0.85em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
-.card-info {
+#card-display .card-info span {
+    font-weight: 600;
+}
+
+/* Rarity colors for main card display */
+#card-display .card-rarity.common { color: #a0a0a0; }
+#card-display .card-rarity.uncommon { color: var(--stake-green-primary); }
+#card-display .card-rarity.rare { color: #00b0ff; }
+#card-display .card-rarity.epic { color: #9c27b0; }
+#card-display .card-rarity.legendary { color: #ffeb3b; }
+
+
+/* Card Value Details below the main card display */
+.card-value-details {
     width: 100%;
     text-align: center;
-    font-size: 1.2em;
-    min-height: 90px;
-    display: flex;
+    font-size: 1em;
+    min-height: 40px; /* Ensure some space */
+    display: flex; /* Use flex to center content */
     flex-direction: column;
     justify-content: center;
     padding: 10px;
-    flex-shrink: 1;
-    flex-grow: 0;
     color: var(--stake-text-medium);
     font-weight: 500;
+    margin-top: 0; /* Remove top margin as it's part of the main roller container */
+}
+.card-value-details p {
+    margin: 0;
 }
 
-.card-info p {
-    margin: 8px 0;
-    padding: 0;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
 
-.card-info strong {
-    color: var(--stake-green-primary);
-    font-weight: 700;
+/* Action Buttons Container */
+.action-buttons {
+    display: flex;
+    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+    justify-content: center;
+    gap: 15px; /* Space between buttons */
+    margin-top: 20px; /* Space from card display above */
+    width: 100%;
 }
 
 /* General Action Button Styling (Roll, Sell All, Confirm Sell) */
@@ -608,7 +620,7 @@ h1 { /* This is for the card game page */
     outline: none;
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-top: 20px;
+    flex-shrink: 0; /* Prevent buttons from shrinking too much */
 }
 
 .action-button:hover {
@@ -628,6 +640,16 @@ h1 { /* This is for the card game page */
     cursor: not-allowed;
     box-shadow: none;
     transform: translateY(0);
+}
+
+/* Sell Button specific styling */
+.action-button.sell-button {
+    background: linear-gradient(45deg, #e74c3c, #c0392b); /* Reddish gradient */
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3), 0 0 8px rgba(231, 76, 60, 0.2);
+}
+.action-button.sell-button:hover {
+    background: linear-gradient(45deg, #c0392b, #e74c3c);
+    box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4), 0 0 12px rgba(231, 76, 60, 0.3);
 }
 
 /* Cancel Button specific styling */
@@ -661,7 +683,7 @@ h1 { /* This is for the card game page */
     text-transform: uppercase;
 }
 
-.balance-display {
+.balance-display { /* Applied to both header and bottom balance displays */
     font-size: 2.5em;
     font-weight: 800;
     color: var(--stake-text-light);
@@ -688,7 +710,7 @@ h1 { /* This is for the card game page */
     transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
 }
 
-.modal-overlay.active {
+.modal-overlay[style*="display: block"] { /* Force visibility for JS controlled display */
     opacity: 1;
     visibility: visible;
 }
@@ -705,7 +727,24 @@ h1 { /* This is for the card game page */
     background-clip: padding-box, border-box;
     background-image: linear-gradient(to bottom, var(--stake-medium-dark-bg), var(--stake-medium-dark-bg)),
                       linear-gradient(45deg, var(--stake-green-primary) 0%, rgba(0,229,118,0.2) 50%, var(--stake-green-primary) 100%);
+    position: relative; /* For close button positioning */
 }
+
+.modal-content .close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    color: var(--stake-text-medium);
+    font-size: 2em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.modal-content .close-button:hover {
+    color: var(--stake-green-primary);
+}
+
 
 .modal-content h3 {
     color: var(--stake-green-primary);
@@ -847,22 +886,22 @@ h1 { /* This is for the card game page */
 
     /* Existing game page responsiveness */
     .main-app-container {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; /* Stack columns on smaller screens */
         justify-content: center;
         gap: 20px;
         padding: 20px;
     }
     .inventory-container, .roller-container, .balance-container {
-        max-width: 480px;
+        max-width: 480px; /* Constrain width for better readability */
         width: 100%;
-        margin: 0 auto;
+        margin: 0 auto; /* Center individual sections */
     }
     .inventory-container {
         padding: 40px;
-        height: auto;
+        height: auto; /* Allow height to adjust */
     }
     .inventory-list {
-        max-height: 400px;
+        max-height: 400px; /* Max height for scrolling */
         grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     }
     .inventory-card {
@@ -912,8 +951,11 @@ h1 { /* This is for the card game page */
         width: 180px;
         height: 252px;
     }
-    .card-info {
-        font-size: 1.1em;
+    #card-display .card-info {
+        font-size: 0.8em;
+    }
+    #card-display .card-info h3 {
+        font-size: 1em;
     }
     .action-button {
         padding: 15px 30px;
@@ -923,19 +965,32 @@ h1 { /* This is for the card game page */
         grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
     }
     .inventory-card {
+        width: 90px;
         height: 170px; /* Adjust height for smaller screens */
     }
-    .inventory-card img {
+    .inventory-card-image {
         width: 70px;
         height: 98px;
     }
     .balance-display {
         font-size: 2em;
     }
+    .modal-content {
+        padding: 20px;
+    }
+    .modal-content h3 {
+        font-size: 1.5em;
+    }
+    .modal-content p {
+        font-size: 0.9em;
+    }
 }
 
 /* On very small screens, remove glow and borders for better performance and clean look */
 @media (max-width: 600px) {
+    body {
+        background: var(--stake-dark-blue-bg); /* Solid background on small screens */
+    }
     .main-header, .game-page-header {
         padding: 8px 10px;
     }
@@ -1001,11 +1056,6 @@ h1 { /* This is for the card game page */
         margin-bottom: 25px;
     }
 
-    #card-presentation {
-        gap: 20px;
-        margin-bottom: 30px;
-    }
-
     .card-display-area {
         width: 160px;
         height: 224px;
@@ -1013,8 +1063,11 @@ h1 { /* This is for the card game page */
         border: none;
     }
 
-    .card-info {
-        font-size: 1em;
+    #card-display .card-info {
+        font-size: 0.75em;
+    }
+    #card-display .card-info h3 {
+        font-size: 0.9em;
     }
 
     .action-button {
@@ -1025,9 +1078,10 @@ h1 { /* This is for the card game page */
         grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     }
     .inventory-card {
+        width: 80px;
         height: 150px; /* Adjust height for smallest screens */
     }
-    .inventory-card img {
+    .inventory-card-image {
         width: 60px;
         height: 84px;
     }
