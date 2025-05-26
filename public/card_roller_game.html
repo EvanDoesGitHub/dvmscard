@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DVMS Card Roller</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <header class="game-page-header">
+        <a href="/" class="logo-link">
+            <div class="logo">DVMS</div>
+        </a>
+        <div class="balance-display-header">
+            <span class="balance-amount-header" id="current-balance-header-game-page">$0.00</span>
+        </div>
+    </header>
+
+    <div class="main-app-container">
+        <div class="content-section inventory-container">
+            <h2>YOUR INVENTORY</h2>
+            <div class="inventory-list" id="inventory-list">
+                <p class="empty-inventory-message">Roll a card to start your collection!</p>
+            </div>
+            <button id="sell-all-button" class="action-button">SELL ALL CARDS</button>
+        </div>
+
+        <div class="content-section roller-container">
+            <h1>DVMS CARD ROLLER</h1>
+            <div id="card-presentation">
+                <div class="card-display-area">
+                    <img id="rolling-card-image" class="card-image" src="" alt="Click Roll to get a card">
+                </div>
+                <div id="card-info" class="card-info">
+                    <p>Click the "Roll Card" button to get a new card!</p>
+                </div>
+            </div>
+            <button id="roll-button" class="action-button">ROLL CARD!</button>
+        </div>
+
+        <div class="content-section balance-container">
+            <h2>YOUR BALANCE</h2>
+            <p class="balance-display" id="current-balance">$0.00</p>
+        </div>
+    </div>
+
+    <div id="sell-modal-overlay" class="modal-overlay">
+        <div class="modal-content content-section">
+            <h3 id="modal-card-title"></h3>
+            <img id="modal-card-image" class="modal-card-image" src="" alt="Card Image">
+            <p>Rarity: <strong id="modal-card-rarity"></strong></p>
+            <p>Value: $<strong id="modal-card-value"></strong></p>
+            <p>Available: <strong id="modal-card-max-count"></strong></p>
+
+            <div class="modal-input-group">
+                <label for="sell-quantity">Quantity to Sell:</label>
+                <input type="number" id="sell-quantity" value="1" min="1">
+            </div>
+            <p>Potential Earnings: $<strong id="modal-potential-earnings">0.00</strong></p>
+            <div class="modal-buttons">
+                <button id="confirm-sell-button" class="action-button">Confirm Sell</button>
+                <button id="cancel-sell-button" class="action-button cancel-button">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sell-all-modal-overlay" class="modal-overlay">
+        <div class="modal-content content-section">
+            <h3>Confirm Sell All Cards</h3>
+            <p>You are about to sell all cards in your inventory.</p>
+            <div class="sell-all-cards-list" id="sell-all-cards-list">
+                </div>
+            <p>Total Potential Earnings: $<strong id="sell-all-potential-earnings">0.00</strong></p>
+            <div class="modal-buttons">
+                <button id="confirm-sell-all-button" class="action-button">Confirm Sell All</button>
+                <button id="cancel-sell-all-button" class="action-button cancel-button">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

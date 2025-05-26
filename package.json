@@ -1,0 +1,23 @@
+{
+  "name": "dvms-card-roller",
+  "version": "1.0.0",
+  "description": "A standalone web application for rolling DVMS cards.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "card",
+    "roller",
+    "web",
+    "demo",
+    "dvms"
+  ],
+  "author": "Evan Bang",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.15.1"
+  }
+}

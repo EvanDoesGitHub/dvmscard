@@ -1,0 +1,25 @@
+{
+  "users": {
+    "default-user-id": {
+      "balance": 130,
+      "inventory": {
+        "card1": {
+          "id": "card1",
+          "title": "Freaky Braeden",
+          "rarity": "Uncommon",
+          "value": 41,
+          "image": "https://placehold.co/220x308/1A1B1E/00E576?text=Freaky+Braeden",
+          "count": 1
+        },
+        "card8": {
+          "id": "card8",
+          "title": "Basic Ben",
+          "rarity": "Common",
+          "value": 15,
+          "image": "https://placehold.co/220x308/1A1B1E/00E576?text=Basic+Ben",
+          "count": 1
+        }
+      }
+    }
+  }
+}

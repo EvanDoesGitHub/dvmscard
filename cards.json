@@ -1,0 +1,12 @@
+[
+  { "id": "card1", "title": "Freaky Braeden", "rarity": "Uncommon", "value": 41, "image": "https://placehold.co/220x308/1A1B1E/00E576?text=Freaky+Braeden" },
+  { "id": "card2", "title": "Mystic Maya", "rarity": "Rare", "value": 120, "image": "https://placehold.co/220x308/1A1B1E/00E576?text=Mystic+Maya" },
+  { "id": "card3", "title": "Legendary Leo", "rarity": "Legendary", "value": 500, "image": "https://placehold.co/220x308/1A1B1E/00E576?text=Legendary+Leo" },
+  { "id": "card4", "title": "Common Carl", "rarity": "Common", "value": 10, "image": "https://placehold.co/220x308/1A1B1E/00E576?text=Common+Carl" },
+  { "id": "card5", "title": "Epic Emily", "rarity": "Epic", "value": 250, "image": "https://placehold.co/220x308/1A1B1E/00E576?text=Epic+Emily" },
+  { "id": "card6", "title": "Shiny Sarah", "rarity": "Uncommon", "value": 55, "image": "https://placehold.co/220x308/1A1B1E/00E576?text=Shiny+Sarah" },
+  { "id": "card7", "title": "Ancient Alex", "rarity": "Legendary", "value": 750, "image": "https://placehold.co/220x308/1A1B1E/00E576?text=Ancient+Alex" },
+  { "id": "card8", "title": "Basic Ben", "rarity": "Common", "value": 15, "image": "https://placehold.co/220x308/1A1B1E/00E576?text=Basic+Ben" },
+  { "id": "card9", "title": "Vivid Vicky", "rarity": "Rare", "value": 180, "image": "https://placehold.co/220x308/1A1B1E/00E576?text=Vivid+Vicky" },
+  { "id": "card10", "title": "Grand Gabriel", "rarity": "Epic", "value": 320, "image": "https://placehold.co/220x308/1A1B1E/00E576?text=Grand+Gabriel" }
+]

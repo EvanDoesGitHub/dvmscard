@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DVMS Games - Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-left">
+            <div class="logo">DVMS</div>
+        </div>
+        <div class="header-right">
+            <div class="balance-display-header">
+                <span class="balance-amount-header" id="current-balance-header">$0.00</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <main class="content-area full-width-content">
+            <div class="game-grid">
+                <a href="/card_roller_game.html" class="game-card">
+                    <div class="game-card-image card-roller-image">
+                        <img src="https://placehold.co/220x308/1A1B1E/00E576?text=DVMS+Card+Roller" alt="DVMS Card Roller">
+                    </div>
+                    <div class="game-card-info">
+                        <p class="game-title">DVMS CARD ROLLER</p>
+                        <p class="game-category">DVMS ORIGINALS</p>
+                    </div>
+                </a>
+
+                <div class="game-card template">
+                    <div class="game-card-image game-dice-image">
+                        <img src="https://placehold.co/220x308/1A1B1E/00E576?text=TEMPLATE" alt="Template Game">
+                    </div>
+                    <div class="game-card-info">
+                        <p class="game-title">TEMPLATE</p>
+                        <p class="game-category">DVMS GAMES</p>
+                    </div>
+                </div>
+
+                <div class="game-card template">
+                    <div class="game-card-image game-mines-image">
+                        <img src="https://placehold.co/220x308/1A1B1E/00E576?text=TEMPLATE" alt="Template Game">
+                    </div>
+                    <div class="game-card-info">
+                        <p class="game-title">TEMPLATE</p>
+                        <p class="game-category">DVMS GAMES</p>
+                    </div>
+                </div>
+
+                <div class="game-card template">
+                    <div class="game-card-image game-limbo-image">
+                        <img src="https://placehold.co/220x308/1A1B1E/00E576?text=TEMPLATE" alt="Template Game">
+                    </div>
+                    <div class="game-card-info">
+                        <p class="game-title">TEMPLATE</p>
+                        <p class="game-category">DVMS GAMES</p>
+                    </div>
+                </div>
+
+                <div class="game-card template">
+                    <div class="game-card-image game-plinko-image">
+                        <img src="https://placehold.co/220x308/1A1B1E/00E576?text=TEMPLATE" alt="Template Game">
+                    </div>
+                    <div class="game-card-info">
+                        <p class="game-title">TEMPLATE</p>
+                        <p class="game-category">DVMS GAMES</p>
+                    </div>
+                </div>
+
+                <div class="game-card template">
+                    <div class="game-card-image game-keno-image">
+                        <img src="https://placehold.co/220x308/1A1B1E/00E576?text=TEMPLATE" alt="Template Game">
+                    </div>
+                    <div class="game-card-info">
+                        <p class="game-title">TEMPLATE</p>
+                        <p class="game-category">DVMS GAMES</p>
+                    </div>
+                </div>
+
+                <div class="game-card template">
+                    <div class="game-card-image game-hilo-image">
+                        <img src="https://placehold.co/220x308/1A1B1E/00E576?text=TEMPLATE" alt="Template Game">
+                    </div>
+                    <div class="game-card-info">
+                        <p class="game-title">TEMPLATE</p>
+                        <p class="game-category">DVMS GAMES</p>
+                    </div>
+                </div>
+
+                <div class="game-card template">
+                    <div class="game-card-image game-slide-image">
+                        <img src="https://placehold.co/220x308/1A1B1E/00E576?text=TEMPLATE" alt="Template Game">
+                    </div>
+                    <div class="game-card-info">
+                        <p class="game-title">TEMPLATE</p>
+                        <p class="game-category">DVMS GAMES</p>
+                    </div>
+                </div>
+
+                <div class="game-card template">
+                    <div class="game-card-image game-crash-image">
+                        <img src="https://placehold.co/220x308/1A1B1E/00E576?text=TEMPLATE" alt="Template Game">
+                    </div>
+                    <div class="game-card-info">
+                        <p class="game-title">TEMPLATE</p>
+                        <p class="game-category">DVMS GAMES</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Update balance on the header for the home page
+        const currentBalanceHeader = document.getElementById('current-balance-header');
+        // Retrieve currentBalance from localStorage or set default
+        let currentBalance = parseFloat(localStorage.getItem('dvms_current_balance')) || 0.00;
+
+        function updateHeaderBalanceDisplay() {
+            currentBalanceHeader.textContent = `$${currentBalance.toFixed(2)}`;
+        }
+        updateHeaderBalanceDisplay();
+
+        // Listen for custom event to update balance from game page if needed
+        window.addEventListener('balanceUpdated', (event) => {
+            currentBalance = event.detail.newBalance;
+            updateHeaderBalanceDisplay();
+            localStorage.setItem('dvms_current_balance', currentBalance.toFixed(2));
+        });
+    </script>
+</body>
+</html>
