@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DVMS Card Roller Game</title> <link rel="preconnect" href="https://fonts.googleapis.com">
+    <title>DVMS Card Roller Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -23,10 +24,17 @@
             <h2>YOUR INVENTORY</h2>
             <div class="inventory-list" id="inventory-container"> <p class="empty-inventory-message">Roll a card to start your collection!</p>
             </div>
-            </div>
+            <button id="sell-all-button" class="action-button">SELL ALL CARDS</button> </div>
 
         <div class="content-section roller-container">
             <h1>DVMS CARD ROLLER</h1>
+
+            <div id="initial-roll-message" class="card-display-area">
+                <img class="card-image" src="https://placehold.co/220x308/1A1B1E/00E576?text=Click+Roll+To+Start" alt="Click Roll to get a card">
+                <div class="card-info">
+                    <p>Click the "Roll Card" button to get a new card!</p>
+                </div>
+            </div>
 
             <div id="rolling-card-animation" class="card-display-area" style="display: none;">
                 </div>
@@ -38,17 +46,12 @@
                     <p id="card-value-description"></p> </div>
             </div>
 
-            <div id="initial-roll-message" class="card-display-area">
-                <img class="card-image" src="https://placehold.co/220x308/1A1B1E/00E576?text=Click+Roll+To+Start" alt="Click Roll to get a card">
-                <div class="card-info">
-                    <p>Click the "Roll Card" button to get a new card!</p>
-                </div>
-            </div>
-
-
             <div class="action-buttons">
                 <button id="roll-button" class="action-button">ROLL CARD!</button>
-                <button id="open-pack-button" class="action-button">OPEN PACK</button> <button id="back-button" class="action-button" style="display: none;">BACK TO INVENTORY</button> <button id="sell-card-button" class="action-button sell-button" style="display: none;">SELL CARD</button> </div>
+                <button id="open-pack-button" class="action-button">OPEN PACK</button>
+                <button id="back-button" class="action-button" style="display: none;">BACK TO INVENTORY</button>
+                <button id="sell-card-button" class="action-button sell-button" style="display: none;">SELL CARD</button>
+            </div>
 
         </div>
 
@@ -68,5 +71,20 @@
         </div>
     </div>
 
-    <script src="script.js"></script> </body>
+    <div id="sell-all-modal-overlay" class="modal-overlay" style="display: none;">
+        <div class="modal-content content-section">
+            <span class="close-button" id="close-sell-all-modal">&times;</span> <h3>Confirm Sell All Cards</h3>
+            <p>You are about to sell all cards in your inventory.</p>
+            <div class="sell-all-cards-list" id="sell-all-cards-list">
+                </div>
+            <p>Total Potential Earnings: $<strong id="sell-all-potential-earnings">0.00</strong></p>
+            <div class="modal-buttons">
+                <button id="confirm-sell-all-button" class="action-button">Confirm Sell All</button>
+                <button id="cancel-sell-all-button" class="action-button cancel-button">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
 </html>
