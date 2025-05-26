@@ -1,467 +1,347 @@
 // public/script.js
-// This script is specifically for the card_roller_game.html page.
 
+// *** IMPORTANT: This is your Railway application's base URL ***
+const BASE_URL = 'https://dvms.up.railway.app';
+// ************************************************************
+
+// DOM Elements
+const balanceDisplay = document.getElementById('balance-display');
 const rollButton = document.getElementById('roll-button');
-const rollingCardImage = document.getElementById('rolling-card-image');
-const cardInfoDisplay = document.getElementById('card-info');
-const inventoryList = document.getElementById('inventory-list');
-const emptyInventoryMessage = document.querySelector('.empty-inventory-message');
-const sellAllButton = document.getElementById('sell-all-button');
-
-// Balance displays
-const currentBalanceDisplayMain = document.getElementById('current-balance'); // Main balance on game page
-const currentBalanceDisplayHeader = document.getElementById('current-balance-header-game-page'); // Header balance on game page
-
-// Single Sell Modal elements
-const sellModalOverlay = document.getElementById('sell-modal-overlay');
-const modalCardTitle = document.getElementById('modal-card-title');
-const modalCardImage = document.getElementById('modal-card-image');
-const modalCardRarity = document.getElementById('modal-card-rarity');
-const modalCardValue = document.getElementById('modal-card-value');
-const modalCardMaxCount = document.getElementById('modal-card-max-count');
-const sellQuantityInput = document.getElementById('sell-quantity');
-const modalPotentialEarnings = document.getElementById('modal-potential-earnings');
+const inventoryContainer = document.getElementById('inventory-container');
+const cardDisplay = document.getElementById('card-display');
+const cardImage = document.getElementById('card-image');
+const cardTitle = document.getElementById('card-title');
+const cardRarity = document.getElementById('card-rarity');
+const cardValue = document.getElementById('card-value');
+const rarityRibbon = document.getElementById('rarity-ribbon');
+const rollingCardAnimation = document.getElementById('rolling-card-animation');
+const backButton = document.getElementById('back-button');
+const sellCardButton = document.getElementById('sell-card-button');
+const openPackButton = document.getElementById('open-pack-button');
+const cardValueDisplay = document.getElementById('card-value-display');
+const cardValueDescription = document.getElementById('card-value-description');
+const confirmationModal = document.getElementById('confirmation-modal');
 const confirmSellButton = document.getElementById('confirm-sell-button');
 const cancelSellButton = document.getElementById('cancel-sell-button');
+const closeConfirmationModal = document.querySelector('#confirmation-modal .close-button');
 
-// Sell All Modal elements
-const sellAllModalOverlay = document.getElementById('sell-all-modal-overlay');
-const sellAllPotentialEarnings = document.getElementById('sell-all-potential-earnings');
-const sellAllCardsList = document.getElementById('sell-all-cards-list');
-const confirmSellAllButton = document.getElementById('confirm-sell-all-button');
-const cancelSellAllButton = document.getElementById('cancel-sell-all-button');
 
-let animationInterval; // To store the interval ID for the rolling animation
-let allCardImages = []; // To store all card image URLs fetched from the server for animation
-let rolledCardsInventory = {}; // Use an object (map) to store cards by ID and their count
-let currentBalance = 0.00; // Initialized by loading from server or localStorage
+// Game State
+let userBalance = 0.00;
+let userInventory = {};
+let currentRolledCard = null; // To store the card that was just rolled
+let cardsForAnimation = []; // Array of all card images for the rolling animation
 
-let cardToSell = null; // Stores the card object currently being sold
-let hasRolledInitially = false; // Flag to track if the user has attempted a roll at least once
+// --- Utility Functions ---
 
-// Function to save user data (balance and inventory) to the server
+function formatCurrency(amount) {
+    return amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+}
+
+function updateBalanceDisplay() {
+    balanceDisplay.textContent = `Balance: ${formatCurrency(userBalance)}`;
+    saveUserData(); // Save balance whenever it updates
+}
+
+function updateInventoryDisplay() {
+    inventoryContainer.innerHTML = ''; // Clear existing inventory
+    const sortedInventory = Object.values(userInventory).sort((a, b) => {
+        // Sort by rarity: Legendary > Epic > Rare > Uncommon > Common
+        const rarityOrder = { 'Legendary': 5, 'Epic': 4, 'Rare': 3, 'Uncommon': 2, 'Common': 1 };
+        return rarityOrder[b.rarity] - rarityOrder[a.rarity];
+    });
+
+    if (sortedInventory.length === 0) {
+        inventoryContainer.innerHTML = '<p>Your inventory is empty! Roll some cards!</p>';
+        return;
+    }
+
+    sortedInventory.forEach(card => {
+        const cardElement = document.createElement('div');
+        cardElement.classList.add('inventory-card');
+        cardElement.classList.add(card.rarity.toLowerCase()); // Add rarity class for styling
+
+        // Add count overlay if more than one
+        let countOverlay = '';
+        if (card.count && card.count > 1) {
+            countOverlay = `<div class="card-count-overlay">${card.count}</div>`;
+        }
+
+        cardElement.innerHTML = `
+            ${countOverlay}
+            <img src="${card.image}" alt="${card.title}" class="inventory-card-image">
+            <div class="inventory-card-info">
+                <span class="inventory-card-title">${card.title}</span>
+                <span class="inventory-card-rarity ${card.rarity.toLowerCase()}">${card.rarity}</span>
+                <span class="inventory-card-value">Value: ${formatCurrency(card.value)}</span>
+            </div>
+        `;
+        cardElement.addEventListener('click', () => displayCardDetails(card));
+        inventoryContainer.appendChild(cardElement);
+    });
+}
+
+function displayCardDetails(card) {
+    cardImage.src = card.image;
+    cardImage.alt = card.title;
+    cardTitle.textContent = card.title;
+    cardRarity.textContent = card.rarity;
+    cardRarity.className = `card-rarity ${card.rarity.toLowerCase()}`; // Update class for styling
+    cardValue.textContent = `Value: ${formatCurrency(card.value)}`;
+    rarityRibbon.className = `rarity-ribbon ${card.rarity.toLowerCase()}`;
+
+    currentRolledCard = card; // Set the current card for potential selling
+
+    // Show/hide sell button based on card count
+    if (userInventory[card.id] && userInventory[card.id].count > 0) {
+        sellCardButton.style.display = 'block';
+    } else {
+        sellCardButton.style.display = 'none'; // Should not happen if coming from inventory
+    }
+
+    // Hide roll button, show back and sell buttons
+    rollButton.style.display = 'none';
+    openPackButton.style.display = 'none'; // Hide open pack button
+    backButton.style.display = 'block';
+    cardDisplay.style.display = 'block';
+    cardValueDisplay.style.display = 'flex'; // Show card value specific details
+    cardValueDescription.textContent = 'This card can be sold for its listed value.';
+
+    rollingCardAnimation.style.display = 'none'; // Hide animation when displaying details
+    cardDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Scroll to card
+}
+
+
+// --- Server Communication ---
+
+async function loadUserData() {
+    try {
+        const response = await fetch(`${BASE_URL}/api/user-data`); // Use BASE_URL
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        userBalance = data.balance;
+        // Ensure inventory is an object, convert from Map if necessary (from Mongoose)
+        userInventory = data.inventory ? (data.inventory instanceof Object && !Array.isArray(data.inventory) ? data.inventory : Object.fromEntries(new Map(Object.entries(data.inventory)))) : {};
+        updateBalanceDisplay();
+        updateInventoryDisplay();
+        console.log("User data loaded from server.");
+    } catch (error) {
+        console.error('Error loading user data from server:', error);
+        console.warn("Falling back to localStorage for user data.");
+        // Fallback to localStorage if server fails
+        const storedBalance = localStorage.getItem('userBalance');
+        const storedInventory = localStorage.getItem('userInventory');
+        userBalance = storedBalance ? parseFloat(storedBalance) : 0.00;
+        userInventory = storedInventory ? JSON.parse(storedInventory) : {};
+        updateBalanceDisplay();
+        updateInventoryDisplay();
+    }
+}
+
 async function saveUserData() {
     try {
-        const response = await fetch('http://localhost:3000/api/save-user-data', {
+        const response = await fetch(`${BASE_URL}/api/save-user-data`, { // Use BASE_URL
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                balance: currentBalance,
-                inventory: rolledCardsInventory
-            })
+            body: JSON.stringify({ balance: userBalance, inventory: userInventory }),
         });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        console.log("User data saved to server:", result.message);
+    } catch (error) {
+        console.error('Error saving user data to server:', error);
+        console.warn("Could not save to server. Data might be lost on refresh if not in localStorage.");
+        // Fallback to localStorage if server fails
+        localStorage.setItem('userBalance', userBalance);
+        localStorage.setItem('userInventory', JSON.stringify(userInventory));
+    }
+}
+
+async function fetchAllCardsForAnimation() {
+    try {
+        const response = await fetch(`${BASE_URL}/api/cards-images`); // Use BASE_URL
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log('User data saved to server:', data.message);
-        localStorage.setItem('dvms_current_balance', currentBalance.toFixed(2)); // Also save to localStorage as a robust fallback
-        localStorage.setItem('dvms_rolled_cards_inventory', JSON.stringify(rolledCardsInventory));
-    } catch (error) {
-        console.error('Error saving user data to server:', error);
-        // Fallback to localStorage if server save fails
-        localStorage.setItem('dvms_current_balance', currentBalance.toFixed(2));
-        localStorage.setItem('dvms_rolled_cards_inventory', JSON.stringify(rolledCardsInventory));
-    }
-}
-
-// Function to load user data (balance and inventory) from the server
-async function loadUserData() {
-    try {
-        const response = await fetch('http://localhost:3000/api/user-data');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const userData = await response.json();
-        currentBalance = userData.balance || 0.00;
-        rolledCardsInventory = userData.inventory || {};
-        console.log('User data loaded from server:', { balance: currentBalance, inventory: rolledCardsInventory });
-        updateBalanceDisplay(); // Update UI with loaded balance
-        renderInventory(); // Update UI with loaded inventory
-        localStorage.setItem('dvms_current_balance', currentBalance.toFixed(2)); // Keep localStorage in sync
-        localStorage.setItem('dvms_rolled_cards_inventory', JSON.stringify(rolledCardsInventory));
-    } catch (error) {
-        console.error('Error loading user data from server:', error);
-        // Fallback to localStorage if server load fails
-        currentBalance = parseFloat(localStorage.getItem('dvms_current_balance')) || 0.00;
-        rolledCardsInventory = JSON.parse(localStorage.getItem('dvms_rolled_cards_inventory')) || {};
-        console.log('Falling back to localStorage for user data.');
-        updateBalanceDisplay();
-        renderInventory();
-    }
-}
-
-// Function to update all balance displays and trigger save
-function updateBalanceDisplay() {
-    const formattedBalance = currentBalance.toFixed(2);
-    if (currentBalanceDisplayMain) {
-        currentBalanceDisplayMain.textContent = `$${formattedBalance}`;
-    }
-    if (currentBalanceDisplayHeader) {
-        currentBalanceDisplayHeader.textContent = `$${formattedBalance}`;
-    }
-    saveUserData(); // Trigger save to server (and localStorage fallback)
-    
-    // Dispatch a custom event so other pages (like index.html) can update their balance display
-    window.dispatchEvent(new CustomEvent('balanceUpdated', {
-        detail: { newBalance: currentBalance }
-    }));
-}
-
-// Function to fetch all card images initially for the animation
-async function fetchAllCardsForAnimation() {
-    console.log('Attempting to fetch all card images for animation...');
-    try {
-        const response = await fetch('http://localhost:3000/api/cards-images');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        allCardImages = await response.json();
-        console.log('All card images loaded for animation:', allCardImages.length, allCardImages);
-        if (allCardImages.length === 0) {
-            if (cardInfoDisplay) {
-                console.warn('No card images received from server. Rolling might not work as expected.');
-                cardInfoDisplay.innerHTML = "<p style='color: orange;'>Warning: No card images loaded. Check server data.</p>";
-            }
-        }
+        cardsForAnimation = data;
+        console.log("Cards for animation loaded.");
     } catch (error) {
         console.error('Error fetching cards for animation:', error);
-        allCardImages = [{ image: "https://placehold.co/220x308/FF0000/FFFFFF?text=Error+Loading" }];
-        if (cardInfoDisplay) {
-            cardInfoDisplay.innerHTML = "<p style='color: red;'>Error loading card images for animation. Ensure server is running.</p>";
-        }
+        // Fallback to local placeholders if server fails for animation cards
+        cardsForAnimation = [
+            { id: 'placeholder1', image: 'https://placehold.co/220x308/CCCCCC/000000?text=Card+1' },
+            { id: 'placeholder2', image: 'https://placehold.co/220x308/AAAAAA/FFFFFF?text=Card+2' },
+            { id: 'placeholder3', image: 'https://placehold.co/220x308/DDDDDD/333333?text=Card+3' }
+        ];
     }
 }
 
-// Function to start the rolling animation
-function startRollingAnimation() {
-    console.log('startRollingAnimation called.');
-    if (allCardImages.length === 0) {
-        if (cardInfoDisplay) {
-            cardInfoDisplay.innerHTML = "<p>No cards to roll. Please check server logs or card data.</p>";
-        }
-        if (rollButton) rollButton.disabled = false;
-        return;
-    }
 
-    if (!hasRolledInitially && rollingCardImage && rollingCardImage.parentElement) {
-        rollingCardImage.parentElement.classList.add('hide-placeholder');
-        hasRolledInitially = true;
-    }
-    
-    if (rollingCardImage) {
-        rollingCardImage.classList.remove('landed');
-        rollingCardImage.classList.add('rolling');
-        rollingCardImage.src = ''; 
-        rollingCardImage.style.opacity = 0; 
-    }
+// --- Game Logic ---
 
-    if (cardInfoDisplay) cardInfoDisplay.innerHTML = "<p>Rolling...</p>";
-    if (rollButton) rollButton.disabled = true;
-    if (sellAllButton) sellAllButton.disabled = true;
-
-    let lastIndex = -1;
-
-    animationInterval = setInterval(() => {
-        let randomIndex;
-        do {
-            randomIndex = Math.floor(Math.random() * allCardImages.length);
-        } while (randomIndex === lastIndex && allCardImages.length > 1);
-        
-        if (rollingCardImage) {
-            rollingCardImage.src = allCardImages[randomIndex].image;
-            rollingCardImage.style.opacity = 1;
-        }
-        lastIndex = randomIndex;
-
-    }, 100);
+function showConfirmationModal() {
+    confirmationModal.style.display = 'block';
 }
 
-// Function to add a card to the inventory and update the display
-function addCardToInventory(card) {
-    if (rolledCardsInventory[card.id]) {
-        rolledCardsInventory[card.id].count++;
+function hideConfirmationModal() {
+    confirmationModal.style.display = 'none';
+}
+
+function sellCard() {
+    if (!currentRolledCard) return;
+
+    showConfirmationModal();
+}
+
+async function confirmSellCard() {
+    hideConfirmationModal();
+
+    const cardIdToSell = currentRolledCard.id;
+
+    if (userInventory[cardIdToSell] && userInventory[cardIdToSell].count > 0) {
+        userBalance += currentRolledCard.value;
+        userInventory[cardIdToSell].count--;
+
+        if (userInventory[cardIdToSell].count <= 0) {
+            delete userInventory[cardIdToSell]; // Remove if count is zero
+        }
+        updateBalanceDisplay();
+        updateInventoryDisplay(); // Update inventory display after selling
+
+        console.log(`Sold ${currentRolledCard.title} for ${formatCurrency(currentRolledCard.value)}.`);
+        alert(`You sold ${currentRolledCard.title} for ${formatCurrency(currentRolledCard.value)}!`);
+
+        // Hide card details and return to main view
+        backToMainView();
     } else {
-        rolledCardsInventory[card.id] = { ...card, count: 1 };
-    }
-
-    renderInventory();
-    saveUserData(); // Trigger save to server (and localStorage fallback)
-    if (sellAllButton) sellAllButton.disabled = Object.keys(rolledCardsInventory).length === 0;
-}
-
-// Function to render the inventory list
-function renderInventory() {
-    if (!inventoryList) {
-        console.error("inventoryList element not found. Cannot render inventory.");
-        return;
-    }
-    inventoryList.innerHTML = '';
-
-    const cardsArray = Object.values(rolledCardsInventory);
-
-    if (cardsArray.length === 0) {
-        if (emptyInventoryMessage) {
-            if (!inventoryList.contains(emptyInventoryMessage)) {
-                inventoryList.appendChild(emptyInventoryMessage);
-            }
-            inventoryList.classList.add('empty-state');
-            emptyInventoryMessage.style.display = 'flex';
-        }
-    } else {
-        if (emptyInventoryMessage) {
-            emptyInventoryMessage.style.display = 'none';
-        }
-        inventoryList.classList.remove('empty-state');
-        cardsArray.forEach(card => {
-            const cardElement = document.createElement('div');
-            cardElement.classList.add('inventory-card');
-
-            const imgElement = document.createElement('img');
-            imgElement.src = card.image;
-            imgElement.alt = card.title;
-            imgElement.onerror = function() {
-                this.onerror = null;
-                this.src = 'https://placehold.co/90x126/444444/FFFFFF?text=No+Image';
-            };
-
-            const titleElement = document.createElement('p');
-            titleElement.classList.add('card-title');
-            titleElement.textContent = card.title;
-
-            const rarityElement = document.createElement('p');
-            rarityElement.textContent = card.rarity;
-
-            const valueElement = document.createElement('p');
-            valueElement.textContent = `$${card.value.toFixed(2)}`;
-
-            const sellButton = document.createElement('button');
-            sellButton.classList.add('sell-single-button');
-            sellButton.textContent = 'Sell';
-            sellButton.dataset.cardId = card.id;
-            sellButton.addEventListener('click', () => openSellModal(card.id));
-
-            cardElement.appendChild(imgElement);
-            cardElement.appendChild(titleElement);
-            cardElement.appendChild(rarityElement);
-            cardElement.appendChild(valueElement);
-
-            if (card.count > 1) {
-                const countElement = document.createElement('div');
-                countElement.classList.add('card-count');
-                countElement.textContent = `x${card.count}`;
-                cardElement.appendChild(countElement);
-            }
-            cardElement.appendChild(sellButton);
-
-            inventoryList.appendChild(cardElement);
-        });
+        alert("You don't have this card to sell!");
     }
 }
 
+async function startRollingAnimation() {
+    if (cardsForAnimation.length === 0) {
+        console.warn("Cards for animation not loaded yet. Trying to fetch them again.");
+        await fetchAllCardsForAnimation();
+        if (cardsForAnimation.length === 0) {
+            alert("Cannot start roll: Card data not available.");
+            return;
+        }
+    }
 
-// Function to stop the rolling animation and display the final card
+    console.log("startRollingAnimation called.");
+    rollButton.disabled = true; // Disable button during animation
+    openPackButton.disabled = true;
+
+    // Reset card display to hide previous card details
+    cardDisplay.style.display = 'none';
+    cardValueDisplay.style.display = 'none'; // Hide value details
+    backButton.style.display = 'none';
+    sellCardButton.style.display = 'none';
+
+    rollingCardAnimation.style.display = 'flex'; // Show animation container
+
+    // Start a continuous loop of random card images
+    let animationInterval = setInterval(() => {
+        const randomIndex = Math.floor(Math.random() * cardsForAnimation.length);
+        rollingCardAnimation.innerHTML = `<img src="${cardsForAnimation[randomIndex].image}" class="rolling-card-image" alt="Rolling Card">`;
+    }, 100); // Change image every 100ms
+
+    // Stop animation after a few seconds and display the rolled card
+    setTimeout(() => {
+        clearInterval(animationInterval);
+        stopRollingAnimationAndDisplayCard();
+    }, 3000); // Roll for 3 seconds
+}
+
 async function stopRollingAnimationAndDisplayCard() {
-    console.log('stopRollingAnimationAndDisplayCard called.');
-    clearInterval(animationInterval);
-    if (rollingCardImage) rollingCardImage.classList.remove('rolling');
-
+    console.log("stopRollingAnimationAndDisplayCard called.");
     try {
-        const response = await fetch('http://localhost:3000/roll', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-
+        const response = await fetch(`${BASE_URL}/roll`, { method: 'POST' }); // Use BASE_URL
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-
         const data = await response.json();
         const rolledCard = data.card;
 
-        if (rolledCard) {
-            if (rollingCardImage) {
-                rollingCardImage.src = rolledCard.image;
-                rollingCardImage.alt = rolledCard.title;
-                rollingCardImage.classList.add('landed');
-                rollingCardImage.style.opacity = 1;
-            }
+        currentRolledCard = rolledCard; // Store the rolled card for potential selling
 
-            if (cardInfoDisplay) {
-                cardInfoDisplay.innerHTML = `
-                    <p>You rolled: <strong>${rolledCard.title}</strong></p>
-                    <p>Rarity: <strong>${rolledCard.rarity}</strong></p>
-                    <p>Value: $${rolledCard.value.toFixed(2)}</p>
-                `;
-            }
-            addCardToInventory(rolledCard);
+        // Update card display
+        cardImage.src = rolledCard.image;
+        cardImage.alt = rolledCard.title;
+        cardTitle.textContent = rolledCard.title;
+        cardRarity.textContent = rolledCard.rarity;
+        cardRarity.className = `card-rarity ${rolledCard.rarity.toLowerCase()}`; // Add rarity class for styling
+        cardValue.textContent = `Value: ${formatCurrency(rolledCard.value)}`;
+        rarityRibbon.className = `rarity-ribbon ${rolledCard.rarity.toLowerCase()}`; // Add rarity class to ribbon
+
+        // Add to inventory
+        if (userInventory[rolledCard.id]) {
+            userInventory[rolledCard.id].count++;
         } else {
-            if (cardInfoDisplay) {
-                cardInfoDisplay.innerHTML = "<p>Failed to roll a card. No card data received.</p>";
-            }
-            if (rollingCardImage) {
-                rollingCardImage.src = "https://placehold.co/220x308/FF0000/FFFFFF?text=Error";
-                rollingCardImage.style.opacity = 1;
-            }
+            userInventory[rolledCard.id] = { ...rolledCard, count: 1 };
         }
+        updateInventoryDisplay(); // Update inventory display with the new card
 
+        // Hide animation, show card details
+        rollingCardAnimation.style.display = 'none';
+        cardDisplay.style.display = 'block';
+        cardValueDisplay.style.display = 'flex'; // Show card value specific details
+        cardValueDescription.textContent = 'This card has been added to your inventory!';
+
+        // Show relevant buttons
+        rollButton.disabled = false; // Enable roll button again
+        openPackButton.disabled = false;
+        backButton.style.display = 'block';
+        sellCardButton.style.display = 'block'; // Show sell button for the just rolled card
+        cardDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Scroll to card
+
+        saveUserData(); // Save inventory after a roll
     } catch (error) {
         console.error('Error fetching rolled card:', error);
-        if (cardInfoDisplay) {
-            cardInfoDisplay.innerHTML = "<p>Error: Could not connect to server or roll card. Check server status.</p>";
-        }
-        if (rollingCardImage) {
-            rollingCardImage.src = "https://placehold.co/220x308/FF0000/FFFFFF?text=Error";
-            rollingCardImage.style.opacity = 1;
-        }
-    } finally {
-        if (rollButton) rollButton.disabled = false;
-        if (sellAllButton) sellAllButton.disabled = Object.keys(rolledCardsInventory).length === 0;
+        alert('Failed to roll a card. Please try again.');
+        rollButton.disabled = false;
+        openPackButton.disabled = false;
+        rollingCardAnimation.style.display = 'none'; // Hide animation on error
     }
 }
 
-// --- Single Sell Functionality ---
+function backToMainView() {
+    cardDisplay.style.display = 'none'; // Hide the single card display
+    cardValueDisplay.style.display = 'none'; // Hide card value specific details
+    rollButton.style.display = 'block'; // Show roll button
+    openPackButton.style.display = 'block'; // Show open pack button
+    backButton.style.display = 'none'; // Hide back button
+    sellCardButton.style.display = 'none'; // Hide sell button
+    currentRolledCard = null; // Clear the current rolled card
+    updateInventoryDisplay(); // Refresh inventory display
+}
 
-function openSellModal(cardId) {
-    cardToSell = rolledCardsInventory[cardId];
-    if (!cardToSell) return;
+// --- Event Listeners ---
+rollButton.addEventListener('click', startRollingAnimation);
+openPackButton.addEventListener('click', startRollingAnimation);
+backButton.addEventListener('click', backToMainView);
+sellCardButton.addEventListener('click', sellCard);
 
-    if (modalCardTitle) modalCardTitle.textContent = cardToSell.title;
-    if (modalCardImage) {
-        modalCardImage.src = cardToSell.image;
-        modalCardImage.alt = cardToSell.title;
+// Confirmation Modal Listeners
+confirmSellButton.addEventListener('click', confirmSellCard);
+cancelSellButton.addEventListener('click', hideConfirmationModal);
+closeConfirmationModal.addEventListener('click', hideConfirmationModal);
+window.addEventListener('click', (event) => {
+    if (event.target == confirmationModal) {
+        hideConfirmationModal();
     }
-    if (modalCardRarity) modalCardRarity.textContent = cardToSell.rarity;
-    if (modalCardValue) modalCardValue.textContent = cardToSell.value.toFixed(2);
-    if (modalCardMaxCount) modalCardMaxCount.textContent = cardToSell.count;
-
-    if (sellQuantityInput) {
-        sellQuantityInput.value = 1;
-        sellQuantityInput.max = cardToSell.count;
-        sellQuantityInput.min = 1;
-    }
-
-    if (modalPotentialEarnings && sellQuantityInput) {
-        modalPotentialEarnings.textContent = (cardToSell.value * parseInt(sellQuantityInput.value)).toFixed(2);
-    }
-
-    if (sellModalOverlay) sellModalOverlay.classList.add('active');
-}
-
-function closeSellModal() {
-    if (sellModalOverlay) sellModalOverlay.classList.remove('active');
-    cardToSell = null;
-}
-
-if (sellQuantityInput) {
-    sellQuantityInput.addEventListener('input', () => {
-        const quantity = parseInt(sellQuantityInput.value);
-        if (isNaN(quantity) || quantity < 1) {
-            sellQuantityInput.value = 1;
-        } else if (quantity > cardToSell.count) {
-            sellQuantityInput.value = cardToSell.count;
-        }
-        if (modalPotentialEarnings) {
-            modalPotentialEarnings.textContent = (cardToSell.value * parseInt(sellQuantityInput.value)).toFixed(2);
-        }
-    });
-}
-
-if (confirmSellButton) {
-    confirmSellButton.addEventListener('click', () => {
-        const quantityToSell = parseInt(sellQuantityInput.value);
-        if (cardToSell && quantityToSell > 0 && quantityToSell <= cardToSell.count) {
-            const earnings = cardToSell.value * quantityToSell;
-            currentBalance += earnings;
-            updateBalanceDisplay(); // This will trigger saveUserData()
-
-            rolledCardsInventory[cardToSell.id].count -= quantityToSell;
-            if (rolledCardsInventory[cardToSell.id].count <= 0) {
-                delete rolledCardsInventory[cardToSell.id];
-            }
-            renderInventory();
-            saveUserData(); // Ensure inventory is saved after modification
-            closeSellModal();
-            if (sellAllButton) sellAllButton.disabled = Object.keys(rolledCardsInventory).length === 0;
-        }
-    });
-}
-
-if (cancelSellButton) {
-    cancelSellButton.addEventListener('click', closeSellModal);
-}
+});
 
 
-// --- Sell All Functionality ---
-
-function openSellAllModal() {
-    const cardsArray = Object.values(rolledCardsInventory);
-    if (cardsArray.length === 0) {
-        return;
-    }
-
-    let totalEarnings = 0;
-    if (sellAllCardsList) sellAllCardsList.innerHTML = '';
-
-    cardsArray.forEach(card => {
-        const cardValue = card.value * card.count;
-        totalEarnings += cardValue;
-
-        const p = document.createElement('p');
-        p.textContent = `${card.title} (x${card.count}) - $${cardValue.toFixed(2)}`;
-        if (sellAllCardsList) sellAllCardsList.appendChild(p);
-    });
-
-    if (sellAllPotentialEarnings) sellAllPotentialEarnings.textContent = totalEarnings.toFixed(2);
-    if (sellAllModalOverlay) sellAllModalOverlay.classList.add('active');
-}
-
-function closeSellAllModal() {
-    if (sellAllModalOverlay) sellAllModalOverlay.classList.remove('active');
-}
-
-if (confirmSellAllButton) {
-    confirmSellAllButton.addEventListener('click', () => {
-        let totalEarnings = 0;
-        for (const cardId in rolledCardsInventory) {
-            totalEarnings += rolledCardsInventory[cardId].value * rolledCardsInventory[cardId].count;
-        }
-
-        currentBalance += totalEarnings;
-        rolledCardsInventory = {};
-        updateBalanceDisplay(); // This will trigger saveUserData()
-        renderInventory();
-        saveUserData(); // Ensure inventory is saved after modification
-        closeSellAllModal();
-        if (sellAllButton) sellAllButton.disabled = true;
-    });
-}
-
-if (cancelSellAllButton) {
-    cancelSellAllButton.addEventListener('click', closeSellAllModal);
-}
-
-
-// Event listeners for buttons
-if (rollButton) {
-    rollButton.addEventListener('click', () => {
-        startRollingAnimation();
-        setTimeout(stopRollingAnimationAndDisplayCard, 3000);
-    });
-}
-
-if (sellAllButton) {
-    sellAllButton.addEventListener('click', openSellAllModal);
-}
-
-// Initial setup when the page loads
+// --- Initial Load ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Load user data from the server (db.json)
-    loadUserData();
-    // Fetch all card images for animation
-    fetchAllCardsForAnimation();
+    loadUserData(); // Load user data first
+    fetchAllCardsForAnimation(); // Load all cards for the animation
 });
