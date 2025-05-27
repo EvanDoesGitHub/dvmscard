@@ -16,15 +16,18 @@
             <div class="logo">DVMS</div>
         </a>
         <div class="balance-display-header">
-            <span class="balance-amount-header" id="balance-display">$0.00</span> </div>
+            <span class="balance-amount-header" id="balance-display">$0.00</span>
+        </div>
     </header>
 
     <div class="main-app-container">
         <div class="content-section inventory-container">
             <h2>YOUR INVENTORY</h2>
-            <div class="inventory-list" id="inventory-container"> <p class="empty-inventory-message">Roll a card to start your collection!</p>
+            <div class="inventory-list" id="inventory-container">
+                <p class="empty-inventory-message">Roll a card to start your collection!</p>
             </div>
-            <button id="sell-all-button" class="action-button">SELL ALL CARDS</button> </div>
+            <button id="sell-all-button" class="action-button">SELL ALL CARDS</button>
+        </div>
 
         <div class="content-section roller-container">
             <h1>DVMS CARD ROLLER</h1>
@@ -40,16 +43,20 @@
                 </div>
 
             <div id="card-display" class="card-display-area" style="display: none;">
-                <div class="rarity-ribbon" id="rarity-ribbon"></div> <img id="card-image" class="card-image" src="" alt="Card"> <div id="card-info" class="card-info">
-                    <h3 id="card-title"></h3> <p>Rarity: <span id="card-rarity"></span></p> <p id="card-value">Value: $0.00</p> </div>
+                <div class="rarity-ribbon" id="rarity-ribbon"></div>
+                <img id="card-image" class="card-image" src="" alt="Card">
+                <div id="card-info" class="card-info">
+                    <h3 id="card-title"></h3>
+                    <p>Rarity: <span id="card-rarity"></span></p>
+                    <p id="card-value">Value: $0.00</p>
+                </div>
                 <div id="card-value-display" class="card-value-details" style="display: none;">
-                    <p id="card-value-description"></p> </div>
+                    <p id="card-value-description"></p>
+                </div>
             </div>
 
             <div class="action-buttons">
-                <button id="roll-button" class="action-button">ROLL CARD!</button>
-                <button id="open-pack-button" class="action-button">OPEN PACK</button>
-                <button id="back-button" class="action-button" style="display: none;">BACK TO INVENTORY</button>
+                <button id="roll-button" class="action-button">ROLL CARD!</button> <button id="back-button" class="action-button" style="display: none;">BACK TO INVENTORY</button>
                 <button id="sell-card-button" class="action-button sell-button" style="display: none;">SELL CARD</button>
             </div>
 
@@ -57,12 +64,14 @@
 
         <div class="content-section balance-container">
             <h2>YOUR BALANCE</h2>
-            <p class="balance-display" id="balance-display-bottom">$0.00</p> </div>
+            <p class="balance-display" id="balance-display-bottom">$0.00</p>
+        </div>
     </div>
 
     <div id="confirmation-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content content-section">
-            <span class="close-button">&times;</span> <h3>Confirm Sell Card</h3>
+            <span class="close-button" id="close-confirm-modal">&times;</span>
+            <h3>Confirm Sell Card</h3>
             <p>Are you sure you want to sell <strong id="modal-confirm-card-title"></strong> for <strong id="modal-confirm-card-value"></strong>?</p>
             <div class="modal-buttons">
                 <button id="confirm-sell-button" class="action-button">Confirm Sell</button>
@@ -73,7 +82,8 @@
 
     <div id="sell-all-modal-overlay" class="modal-overlay" style="display: none;">
         <div class="modal-content content-section">
-            <span class="close-button" id="close-sell-all-modal">&times;</span> <h3>Confirm Sell All Cards</h3>
+            <span class="close-button" id="close-sell-all-modal">&times;</span>
+            <h3>Confirm Sell All Cards</h3>
             <p>You are about to sell all cards in your inventory.</p>
             <div class="sell-all-cards-list" id="sell-all-cards-list">
                 </div>
@@ -81,6 +91,17 @@
             <div class="modal-buttons">
                 <button id="confirm-sell-all-button" class="action-button">Confirm Sell All</button>
                 <button id="cancel-sell-all-button" class="action-button cancel-button">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="success-modal-overlay" class="modal-overlay" style="display: none;">
+        <div class="modal-content content-section">
+            <span class="close-button" id="close-success-modal">&times;</span>
+            <h3 id="success-modal-title">Success!</h3>
+            <p id="success-modal-message"></p>
+            <div class="modal-buttons">
+                <button id="success-modal-ok-button" class="action-button">OK</button>
             </div>
         </div>
     </div>
