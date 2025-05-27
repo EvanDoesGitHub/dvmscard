@@ -434,11 +434,10 @@ body {
     align-items: center;
     width: 100%;
     max-width: 110px;
-    height: 170px; /* Reduced height to fit only name and rarity well */
+    height: auto; /* Changed to auto to accommodate button */
     overflow: hidden;
     position: relative;
     padding-bottom: 5px;
-    cursor: pointer;
 }
 
 .inventory-card:hover {
@@ -467,6 +466,7 @@ body {
     white-space: normal;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-height: 40px; /* Ensure space for text */
 }
 
 .inventory-card-info span {
@@ -504,7 +504,6 @@ body {
 .inventory-card-rarity.epic { color: #9c27b0; }
 .inventory-card-rarity.legendary { color: #ffeb3b; }
 
-
 .card-count-overlay {
     position: absolute;
     top: 5px;
@@ -517,6 +516,31 @@ body {
     font-weight: bold;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     z-index: 10;
+}
+
+/* New style for individual sell button on inventory cards */
+.inventory-card-sell-button {
+    background: var(--gradient-red-sell);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 8px;
+    font-size: 0.7em;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 5px; /* Space between card info and button */
+    width: calc(100% - 16px); /* Account for card padding */
+    transition: background 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.inventory-card-sell-button:hover {
+    background: var(--gradient-red-sell-hover);
+    transform: translateY(-1px);
+}
+
+.inventory-card-sell-button:active {
+    transform: translateY(0);
 }
 
 
@@ -783,11 +807,12 @@ h1 {
     transform: translateY(0);
 }
 
-.action-button.sell-button {
+/* Renamed from .sell-button to .sell-all-button for clarity for the main button */
+.action-button.sell-all-button {
     background: var(--gradient-red-sell);
     box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3), 0 0 8px rgba(231, 76, 60, 0.2);
 }
-.action-button.sell-button:hover {
+.action-button.sell-all-button:hover {
     background: var(--gradient-red-sell-hover);
     box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4), 0 0 12px rgba(231, 76, 60, 0.3);
 }
@@ -806,7 +831,7 @@ h1 {
     grid-column: 3;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: center; /* Center horizontally */
     justify-content: center;
     padding: 30px;
 }
@@ -1047,7 +1072,11 @@ h1 {
         grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     }
     .inventory-card {
-        height: 170px;
+        height: auto; /* Allow height to adjust */
+        min-height: 170px; /* Ensure minimum height */
+    }
+    .inventory-card-image {
+        height: 126px; /* Keep consistent image height */
     }
 }
 
@@ -1107,7 +1136,8 @@ h1 {
     }
     .inventory-card {
         width: 90px;
-        height: 150px;
+        height: auto; /* Allow height to adjust */
+        min-height: 150px;
     }
     .inventory-card-image {
         width: 70px;
@@ -1218,7 +1248,8 @@ h1 {
     }
     .inventory-card {
         width: 80px;
-        height: 130px;
+        height: auto; /* Allow height to adjust */
+        min-height: 130px;
     }
     .inventory-card-image {
         width: 60px;
