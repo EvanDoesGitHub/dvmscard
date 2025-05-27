@@ -23,6 +23,9 @@
     --gradient-secondary-dark: linear-gradient(135deg, #2a2d32 0%, #1c1f23 100%); /* Darker, richer bg */
     --gradient-red-sell: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
     --gradient-red-sell-hover: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+
+    /* Custom gradient for the DVMS logo text */
+    --logo-gradient: linear-gradient(90deg, #00e576 0%, #00b84f 25%, #00e576 50%, #00b84f 75%, #00e576 100%);
 }
 
 body {
@@ -77,6 +80,19 @@ body {
     100% { transform: scale(1) rotateY(0deg); opacity: 1; filter: brightness(1); }
 }
 
+/* Keyframes for the animated gradient flow on the DVMS logo */
+@keyframes gradient-flow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
+/* Keyframes for the subtle breathing glow of the logo text */
+@keyframes text-glow-pulse {
+    0% { text-shadow: 0 0 8px var(--stake-border-glow-light), 0 0 15px rgba(0, 229, 118, 0.4); }
+    50% { text-shadow: 0 0 12px var(--stake-border-glow-light), 0 0 25px rgba(0, 229, 118, 0.6); }
+    100% { text-shadow: 0 0 8px var(--stake-border-glow-light), 0 0 15px rgba(0, 229, 118, 0.4); }
+}
+
 
 /* ==================================== */
 /* NEW STYLES FOR HOMEPAGE (index.html) */
@@ -101,13 +117,26 @@ body {
     gap: 20px;
 }
 
+/* Updated .logo for animated gradient and glow */
 .logo {
     font-size: 2em;
     font-weight: 900;
-    color: var(--stake-green-primary);
+    /* Remove direct color, use background-clip for gradient */
+    color: transparent; /* Make text transparent so background can show through */
+    background: var(--logo-gradient); /* Apply the gradient */
+    background-size: 200% auto; /* Make the gradient wider than the text for animation */
+    -webkit-background-clip: text; /* Clip background to text shape for WebKit browsers */
+    background-clip: text; /* Standard clipping */
     text-transform: uppercase;
     letter-spacing: 2px;
-    text-shadow: 0 0 8px var(--stake-border-glow-light);
+    /* Apply initial text shadow and animation */
+    text-shadow: 0 0 8px var(--stake-border-glow-light), 0 0 15px rgba(0, 229, 118, 0.4);
+    animation: gradient-flow 3s linear infinite, text-glow-pulse 2s infinite alternate ease-in-out; /* Combine animations */
+    transition: transform 0.2s ease-in-out; /* For hover effect */
+}
+
+.logo-link:hover .logo {
+    transform: scale(1.05); /* Slight scale on hover for interactivity */
 }
 
 .logo-link {
