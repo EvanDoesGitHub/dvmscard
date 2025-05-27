@@ -14,6 +14,7 @@ const sellCardButton = document.getElementById('sell-card-button');
 const sellAllButton = document.getElementById('sell-all-button');
 
 const inventoryContainer = document.getElementById('inventory-container');
+const emptyInventoryMessage = document.getElementById('empty-inventory-message'); // Added ID for this element
 
 const initialRollMessage = document.getElementById('initial-roll-message'); // The initial "Click Roll" div
 const rollingCardAnimation = document.getElementById('rolling-card-animation'); // Container for the rolling animation
@@ -75,11 +76,10 @@ function updateBalanceDisplay() {
 }
 
 function updateInventoryDisplay() {
-    if (!inventoryContainer) {
-        console.error("Inventory container not found in HTML.");
+    if (!inventoryContainer || !emptyInventoryMessage) {
+        console.error("Inventory container or empty message element not found in HTML.");
         return;
     }
-    inventoryContainer.innerHTML = ''; // Clear existing inventory
 
     const sortedInventory = Object.values(userInventory).sort((a, b) => {
         // Sort by rarity: Legendary > Epic > Rare > Uncommon > Common
@@ -87,11 +87,19 @@ function updateInventoryDisplay() {
         return rarityOrder[b.rarity] - rarityOrder[a.rarity];
     });
 
+    // Clear existing cards, but keep the empty message element
+    inventoryContainer.querySelectorAll('.inventory-card').forEach(card => card.remove());
+
     if (sortedInventory.length === 0) {
-        inventoryContainer.innerHTML = '<p class="empty-inventory-message">Roll a card to start your collection!</p>';
+        emptyInventoryMessage.style.display = 'flex'; // Show the empty message
+        inventoryContainer.classList.add('empty-state'); // Add class for centering
         if (sellAllButton) sellAllButton.disabled = true; // Disable sell all if inventory is empty
         return;
+    } else {
+        emptyInventoryMessage.style.display = 'none'; // Hide the empty message
+        inventoryContainer.classList.remove('empty-state'); // Remove class for centering
     }
+
 
     if (sellAllButton) sellAllButton.disabled = false; // Enable sell all if inventory has cards
 
