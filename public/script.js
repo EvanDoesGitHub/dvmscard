@@ -8,11 +8,10 @@ const BASE_URL = 'https://dvms.up.railway.app';
 const balanceDisplay = document.getElementById('balance-display'); // Header balance
 const balanceDisplayBottom = document.getElementById('balance-display-bottom'); // Bottom balance
 
-const rollButton = document.getElementById('roll-button');
-const openPackButton = document.getElementById('open-pack-button');
+const rollButton = document.getElementById('roll-button'); // Now handles both "Roll" and "Open Pack"
 const backButton = document.getElementById('back-button');
 const sellCardButton = document.getElementById('sell-card-button');
-const sellAllButton = document.getElementById('sell-all-button'); // Re-added sell all button
+const sellAllButton = document.getElementById('sell-all-button');
 
 const inventoryContainer = document.getElementById('inventory-container');
 
@@ -34,7 +33,7 @@ const modalConfirmCardTitle = document.getElementById('modal-confirm-card-title'
 const modalConfirmCardValue = document.getElementById('modal-confirm-card-value');
 const confirmSellButton = document.getElementById('confirm-sell-button');
 const cancelSellButton = document.getElementById('cancel-sell-button');
-const closeConfirmationModal = document.querySelector('#confirmation-modal .close-button');
+const closeConfirmModal = document.getElementById('close-confirm-modal'); // Specific ID for close button
 
 // Sell All Modal
 const sellAllModalOverlay = document.getElementById('sell-all-modal-overlay');
@@ -43,6 +42,13 @@ const sellAllPotentialEarnings = document.getElementById('sell-all-potential-ear
 const confirmSellAllButton = document.getElementById('confirm-sell-all-button');
 const cancelSellAllButton = document.getElementById('cancel-sell-all-button');
 const closeSellAllModal = document.getElementById('close-sell-all-modal');
+
+// NEW: Success Message Modal
+const successModalOverlay = document.getElementById('success-modal-overlay');
+const successModalTitle = document.getElementById('success-modal-title');
+const successModalMessage = document.getElementById('success-modal-message');
+const successModalOkButton = document.getElementById('success-modal-ok-button');
+const closeSuccessModal = document.getElementById('close-success-modal');
 
 
 // Game State
@@ -114,11 +120,57 @@ function updateInventoryDisplay() {
     });
 }
 
+/**
+ * Manages the visibility of the main roller section elements.
+ * @param {string} state - 'initial', 'rolling', 'display'
+ */
+function setRollerDisplayState(state) {
+    if (!initialRollMessage || !rollingCardAnimation || !cardDisplay || !rollButton || !backButton || !sellCardButton) {
+        console.error("Missing critical roller display elements in HTML.");
+        return;
+    }
+
+    initialRollMessage.style.display = 'none';
+    rollingCardAnimation.style.display = 'none';
+    cardDisplay.style.display = 'none';
+    cardValueDisplay.style.display = 'none'; // Always hide card value details by default
+
+    rollButton.style.display = 'none';
+    backButton.style.display = 'none';
+    sellCardButton.style.display = 'none';
+
+    switch (state) {
+        case 'initial':
+            initialRollMessage.style.display = 'flex';
+            rollButton.style.display = 'block';
+            rollButton.disabled = false;
+            break;
+        case 'rolling':
+            rollingCardAnimation.style.display = 'flex';
+            rollButton.style.display = 'block'; // Keep roll button visible but disabled
+            rollButton.disabled = true;
+            break;
+        case 'display':
+            cardDisplay.style.display = 'block';
+            cardValueDisplay.style.display = 'flex';
+            backButton.style.display = 'block';
+            sellCardButton.style.display = 'block'; // Will be managed by displayCardDetails for inventory cards
+            break;
+        default:
+            console.warn("Unknown roller display state:", state);
+            initialRollMessage.style.display = 'flex'; // Default to initial state
+            rollButton.style.display = 'block';
+            rollButton.disabled = false;
+            break;
+    }
+}
+
+
 function displayCardDetails(card) {
     // Ensure all necessary DOM elements exist before proceeding
-    const requiredElements = [cardDisplay, cardImage, cardTitle, cardRarity, cardValue, rarityRibbon, cardValueDisplay, cardValueDescription, rollButton, openPackButton, backButton, sellCardButton, initialRollMessage, rollingCardAnimation];
+    const requiredElements = [cardImage, cardTitle, cardRarity, cardValue, rarityRibbon, cardValueDisplay, cardValueDescription];
     if (requiredElements.some(el => el === null)) {
-        console.error("One or more required DOM elements for card details display are missing in HTML.");
+        console.error("One or more required DOM elements for card display are missing in HTML.");
         return;
     }
 
@@ -136,21 +188,11 @@ function displayCardDetails(card) {
     if (userInventory[card.id] && userInventory[card.id].count > 0) {
         sellCardButton.style.display = 'block';
     } else {
-        sellCardButton.style.display = 'none'; // This case should ideally not happen if coming from inventory
+        sellCardButton.style.display = 'none'; // Should not happen if coming from inventory
     }
 
-    // Hide other card display states and show the detailed card display
-    initialRollMessage.style.display = 'none';
-    rollingCardAnimation.style.display = 'none';
-    cardDisplay.style.display = 'block';
-    cardValueDisplay.style.display = 'flex'; // Show card value specific details
+    setRollerDisplayState('display'); // Set the display state to show the card details
     cardValueDescription.textContent = 'This card can be sold for its listed value.';
-
-    // Adjust button visibility
-    rollButton.style.display = 'none';
-    openPackButton.style.display = 'none';
-    backButton.style.display = 'block';
-    // sellCardButton visibility handled above based on inventory count
 
     // cardDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Optional: scroll to card
 }
@@ -239,11 +281,38 @@ function showConfirmationModal() {
     modalConfirmCardTitle.textContent = currentRolledCard.title;
     modalConfirmCardValue.textContent = formatCurrency(currentRolledCard.value);
     confirmationModal.style.display = 'block';
+    confirmationModal.classList.add('active'); // For animation
 }
 
 function hideConfirmationModal() {
     if (confirmationModal) {
-        confirmationModal.style.display = 'none';
+        confirmationModal.classList.remove('active');
+        // Use a timeout to allow animation to complete before hiding
+        setTimeout(() => {
+            confirmationModal.style.display = 'none';
+        }, 300); // Match CSS transition duration
+    }
+}
+
+// NEW: Success Message Modal Functions
+function showSuccessModal(title, message) {
+    if (!successModalOverlay || !successModalTitle || !successModalMessage) {
+        console.error("Success modal elements are missing.");
+        return;
+    }
+    successModalTitle.textContent = title;
+    successModalMessage.textContent = message;
+    successModalOverlay.style.display = 'block';
+    successModalOverlay.classList.add('active'); // For animation
+}
+
+function hideSuccessModal() {
+    if (successModalOverlay) {
+        successModalOverlay.classList.remove('active');
+        // Use a timeout to allow animation to complete before hiding
+        setTimeout(() => {
+            successModalOverlay.style.display = 'none';
+        }, 300); // Match CSS transition duration
     }
 }
 
@@ -271,12 +340,12 @@ async function confirmSellCard() {
         updateInventoryDisplay(); // Update inventory display after selling
 
         console.log(`Sold ${currentRolledCard.title} for ${formatCurrency(currentRolledCard.value)}.`);
-        alert(`You sold ${currentRolledCard.title} for ${formatCurrency(currentRolledCard.value)}!`);
+        showSuccessModal("Card Sold!", `You sold ${currentRolledCard.title} for ${formatCurrency(currentRolledCard.value)}!`);
 
-        // Hide card details and return to main view
-        backToMainView();
+        // Hide card details and return to main view after success modal is closed
+        // This will be handled by the success modal's OK button
     } else {
-        alert("You don't have this card to sell!");
+        showSuccessModal("Error", "You don't have this card to sell!");
     }
 }
 
@@ -289,7 +358,7 @@ function showSellAllModal() {
 
     const cardsArray = Object.values(userInventory);
     if (cardsArray.length === 0) {
-        alert("Your inventory is empty! Nothing to sell.");
+        showSuccessModal("Empty Inventory", "Your inventory is empty! Nothing to sell.");
         return;
     }
 
@@ -305,13 +374,17 @@ function showSellAllModal() {
         sellAllCardsList.appendChild(p);
     });
 
-    sellAllPotentialEarnings.textContent = totalEarnings.toFixed(2);
+    sellAllPotentialEarnings.textContent = formatCurrency(totalEarnings);
     sellAllModalOverlay.style.display = 'block';
+    sellAllModalOverlay.classList.add('active'); // For animation
 }
 
 function hideSellAllModal() {
     if (sellAllModalOverlay) {
-        sellAllModalOverlay.style.display = 'none';
+        sellAllModalOverlay.classList.remove('active');
+        setTimeout(() => {
+            sellAllModalOverlay.style.display = 'none';
+        }, 300); // Match CSS transition duration
     }
 }
 
@@ -328,14 +401,14 @@ async function confirmSellAllCards() {
     updateBalanceDisplay();
     updateInventoryDisplay(); // Re-render empty inventory
 
-    alert(`You sold all cards for a total of ${formatCurrency(totalEarnings)}!`);
-    backToMainView(); // Return to main view after selling all
+    showSuccessModal("All Cards Sold!", `You sold all cards for a total of ${formatCurrency(totalEarnings)}!`);
+    // backToMainView() will be called when success modal is closed
 }
 
 
 async function startRollingAnimation() {
     // Ensure critical DOM elements are present
-    const requiredElements = [rollButton, openPackButton, cardDisplay, rollingCardAnimation, backButton, sellCardButton, initialRollMessage];
+    const requiredElements = [rollButton, cardDisplay, rollingCardAnimation, backButton, sellCardButton, initialRollMessage];
     if (requiredElements.some(el => el === null)) {
         console.error("One or more required DOM elements for rolling animation are missing in HTML.");
         return;
@@ -345,25 +418,13 @@ async function startRollingAnimation() {
         console.warn("Cards for animation not loaded yet. Trying to fetch them again.");
         await fetchAllCardsForAnimation();
         if (cardsForAnimation.length === 0) {
-            alert("Cannot start roll: Card data not available.");
+            showSuccessModal("Error", "Cannot start roll: Card data not available. Please refresh.");
             return;
         }
     }
 
     console.log("startRollingAnimation called.");
-    rollButton.disabled = true; // Disable button during animation
-    openPackButton.disabled = true;
-
-    // Hide initial message and card display, show animation
-    initialRollMessage.style.display = 'none';
-    cardDisplay.style.display = 'none';
-    cardValueDisplay.style.display = 'none'; // Hide value details
-
-    rollingCardAnimation.style.display = 'flex'; // Show animation container
-
-    // Hide back and sell buttons during roll
-    backButton.style.display = 'none';
-    sellCardButton.style.display = 'none';
+    setRollerDisplayState('rolling'); // Set state to rolling
 
     // Start a continuous loop of random card images
     let animationInterval = setInterval(() => {
@@ -380,7 +441,7 @@ async function startRollingAnimation() {
 
 async function stopRollingAnimationAndDisplayCard() {
     // Ensure critical DOM elements are present
-    const requiredElements = [cardImage, cardTitle, cardRarity, cardValue, rarityRibbon, rollingCardAnimation, cardDisplay, cardValueDisplay, cardValueDescription, rollButton, openPackButton, backButton, sellCardButton];
+    const requiredElements = [cardImage, cardTitle, cardRarity, cardValue, rarityRibbon, rollingCardAnimation, cardDisplay, cardValueDisplay, cardValueDescription, rollButton, backButton, sellCardButton];
     if (requiredElements.some(el => el === null)) {
         console.error("One or more required DOM elements for card display after roll are missing in HTML.");
         return;
@@ -413,48 +474,23 @@ async function stopRollingAnimationAndDisplayCard() {
         }
         updateInventoryDisplay(); // Update inventory display with the new card
 
-        // Hide animation, show card details
-        rollingCardAnimation.style.display = 'none';
-        cardDisplay.style.display = 'block';
-        cardValueDisplay.style.display = 'flex'; // Show card value specific details
+        setRollerDisplayState('display'); // Set state to display card
+
         cardValueDescription.textContent = 'This card has been added to your inventory!';
 
-        // Show relevant buttons
-        rollButton.disabled = false; // Enable roll button again
-        openPackButton.disabled = false;
-        backButton.style.display = 'block';
-        sellCardButton.style.display = 'block'; // Show sell button for the just rolled card
-        // cardDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Optional: scroll to card
+        // Enable roll button again
+        rollButton.disabled = false;
 
         saveUserData(); // Save inventory after a roll
     } catch (error) {
         console.error('Error fetching rolled card:', error);
-        alert('Failed to roll a card. Please try again.');
-        rollButton.disabled = false;
-        openPackButton.disabled = false;
-        rollingCardAnimation.style.display = 'none'; // Hide animation on error
-        initialRollMessage.style.display = 'flex'; // Show initial message on error
+        showSuccessModal("Error", "Failed to roll a card. Please try again.");
+        setRollerDisplayState('initial'); // Return to initial state on error
     }
 }
 
 function backToMainView() {
-    // Ensure critical DOM elements are present
-    const requiredElements = [cardDisplay, cardValueDisplay, rollButton, openPackButton, backButton, sellCardButton, initialRollMessage, rollingCardAnimation];
-    if (requiredElements.some(el => el === null)) {
-        console.error("One or more required DOM elements for main view are missing in HTML.");
-        return;
-    }
-
-    cardDisplay.style.display = 'none'; // Hide the single card display
-    cardValueDisplay.style.display = 'none'; // Hide card value specific details
-    rollingCardAnimation.style.display = 'none'; // Hide animation container
-
-    initialRollMessage.style.display = 'flex'; // Show the initial "Click Roll" message
-
-    rollButton.style.display = 'block'; // Show roll button
-    openPackButton.style.display = 'block'; // Show open pack button
-    backButton.style.display = 'none'; // Hide back button
-    sellCardButton.style.display = 'none'; // Hide sell button
+    setRollerDisplayState('initial'); // Set state back to initial
     currentRolledCard = null; // Clear the current rolled card
     updateInventoryDisplay(); // Refresh inventory display
 }
@@ -463,15 +499,14 @@ function backToMainView() {
 document.addEventListener('DOMContentLoaded', () => {
     // Add null checks for elements before adding event listeners
     if (rollButton) rollButton.addEventListener('click', startRollingAnimation);
-    if (openPackButton) openPackButton.addEventListener('click', startRollingAnimation);
     if (backButton) backButton.addEventListener('click', backToMainView);
     if (sellCardButton) sellCardButton.addEventListener('click', sellCard);
-    if (sellAllButton) sellAllButton.addEventListener('click', showSellAllModal); // Event listener for sell all button
+    if (sellAllButton) sellAllButton.addEventListener('click', showSellAllModal);
 
     // Confirmation Modal Listeners
     if (confirmSellButton) confirmSellButton.addEventListener('click', confirmSellCard);
     if (cancelSellButton) cancelSellButton.addEventListener('click', hideConfirmationModal);
-    if (closeConfirmationModal) closeConfirmationModal.addEventListener('click', hideConfirmationModal);
+    if (closeConfirmModal) closeConfirmModal.addEventListener('click', hideConfirmationModal);
     if (confirmationModal) {
         window.addEventListener('click', (event) => {
             if (event.target == confirmationModal) {
@@ -492,7 +527,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // NEW: Success Modal Listeners
+    if (successModalOkButton) successModalOkButton.addEventListener('click', () => {
+        hideSuccessModal();
+        backToMainView(); // Return to main view after success message
+    });
+    if (closeSuccessModal) closeSuccessModal.addEventListener('click', () => {
+        hideSuccessModal();
+        backToMainView(); // Return to main view after success message
+    });
+    if (successModalOverlay) {
+        window.addEventListener('click', (event) => {
+            if (event.target == successModalOverlay) {
+                hideSuccessModal();
+                backToMainView(); // Return to main view after success message
+            }
+        });
+    }
+
+
     loadUserData(); // Load user data first
     fetchAllCardsForAnimation(); // Load all cards for the animation
+    setRollerDisplayState('initial'); // Set initial display state
 });
 
