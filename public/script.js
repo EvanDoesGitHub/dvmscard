@@ -8,8 +8,8 @@ const BASE_URL = 'https://dvms.up.railway.app';
 const balanceDisplay = document.getElementById('balance-display'); // Header balance
 const balanceDisplayBottom = document.getElementById('balance-display-bottom'); // Bottom balance
 
-const rollButton = document.getElementById('roll-button'); // Now handles both "Roll" and "Open Pack"
-const backButton = document.getElementById('back-button');
+const rollButton = document.getElementById('roll-button'); // Now handles initial roll
+const rollAgainButton = document.getElementById('roll-again-button'); // New "Roll Again" button
 const sellCardButton = document.getElementById('sell-card-button');
 const sellAllButton = document.getElementById('sell-all-button');
 
@@ -33,7 +33,7 @@ const modalConfirmCardTitle = document.getElementById('modal-confirm-card-title'
 const modalConfirmCardValue = document.getElementById('modal-confirm-card-value');
 const confirmSellButton = document.getElementById('confirm-sell-button');
 const cancelSellButton = document.getElementById('cancel-sell-button');
-const closeConfirmModal = document.getElementById('close-confirm-modal'); // Specific ID for close button
+const closeConfirmModal = document.getElementById('close-confirm-modal');
 
 // Sell All Modal
 const sellAllModalOverlay = document.getElementById('sell-all-modal-overlay');
@@ -43,7 +43,7 @@ const confirmSellAllButton = document.getElementById('confirm-sell-all-button');
 const cancelSellAllButton = document.getElementById('cancel-sell-all-button');
 const closeSellAllModal = document.getElementById('close-sell-all-modal');
 
-// NEW: Success Message Modal
+// Success Message Modal
 const successModalOverlay = document.getElementById('success-modal-overlay');
 const successModalTitle = document.getElementById('success-modal-title');
 const successModalMessage = document.getElementById('success-modal-message');
@@ -112,8 +112,7 @@ function updateInventoryDisplay() {
             <div class="inventory-card-info">
                 <span class="inventory-card-title">${card.title}</span>
                 <span class="inventory-card-rarity ${card.rarity.toLowerCase()}">${card.rarity}</span>
-                <span class="inventory-card-value">Value: ${formatCurrency(card.value)}</span>
-            </div>
+                </div>
         `;
         cardElement.addEventListener('click', () => displayCardDetails(card));
         inventoryContainer.appendChild(cardElement);
@@ -125,18 +124,20 @@ function updateInventoryDisplay() {
  * @param {string} state - 'initial', 'rolling', 'display'
  */
 function setRollerDisplayState(state) {
-    if (!initialRollMessage || !rollingCardAnimation || !cardDisplay || !rollButton || !backButton || !sellCardButton) {
+    if (!initialRollMessage || !rollingCardAnimation || !cardDisplay || !rollButton || !rollAgainButton || !sellCardButton) {
         console.error("Missing critical roller display elements in HTML.");
         return;
     }
 
+    // Hide all main display areas by default
     initialRollMessage.style.display = 'none';
     rollingCardAnimation.style.display = 'none';
     cardDisplay.style.display = 'none';
     cardValueDisplay.style.display = 'none'; // Always hide card value details by default
 
+    // Hide all action buttons by default
     rollButton.style.display = 'none';
-    backButton.style.display = 'none';
+    rollAgainButton.style.display = 'none';
     sellCardButton.style.display = 'none';
 
     switch (state) {
@@ -147,13 +148,13 @@ function setRollerDisplayState(state) {
             break;
         case 'rolling':
             rollingCardAnimation.style.display = 'flex';
-            rollButton.style.display = 'block'; // Keep roll button visible but disabled
-            rollButton.disabled = true;
+            rollButton.style.display = 'block'; // Keep initial roll button visible but disabled
+            rollButton.disabled = true; // Disable during roll
             break;
         case 'display':
             cardDisplay.style.display = 'block';
             cardValueDisplay.style.display = 'flex';
-            backButton.style.display = 'block';
+            rollAgainButton.style.display = 'block'; // Show "Roll Again"
             sellCardButton.style.display = 'block'; // Will be managed by displayCardDetails for inventory cards
             break;
         default:
@@ -185,16 +186,21 @@ function displayCardDetails(card) {
     currentRolledCard = card; // Set the current card for potential selling
 
     // Show/hide sell button based on card count
+    // If displaying a card from inventory, allow selling if at least one exists
+    // If it's a newly rolled card, it's always available to sell immediately
     if (userInventory[card.id] && userInventory[card.id].count > 0) {
         sellCardButton.style.display = 'block';
     } else {
-        sellCardButton.style.display = 'none'; // Should not happen if coming from inventory
+        sellCardButton.style.display = 'none'; // Should not happen if coming from inventory for selling, or if it's the last card sold
     }
 
     setRollerDisplayState('display'); // Set the display state to show the card details
     cardValueDescription.textContent = 'This card can be sold for its listed value.';
 
-    // cardDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Optional: scroll to card
+    // Add animation class for reveal
+    cardDisplay.classList.remove('reveal-animation'); // Reset animation
+    void cardDisplay.offsetWidth; // Trigger reflow
+    cardDisplay.classList.add('reveal-animation');
 }
 
 
@@ -280,7 +286,7 @@ function showConfirmationModal() {
     }
     modalConfirmCardTitle.textContent = currentRolledCard.title;
     modalConfirmCardValue.textContent = formatCurrency(currentRolledCard.value);
-    confirmationModal.style.display = 'block';
+    confirmationModal.style.display = 'flex'; // Use flex to center
     confirmationModal.classList.add('active'); // For animation
 }
 
@@ -294,7 +300,7 @@ function hideConfirmationModal() {
     }
 }
 
-// NEW: Success Message Modal Functions
+// Success Message Modal Functions
 function showSuccessModal(title, message) {
     if (!successModalOverlay || !successModalTitle || !successModalMessage) {
         console.error("Success modal elements are missing.");
@@ -302,7 +308,7 @@ function showSuccessModal(title, message) {
     }
     successModalTitle.textContent = title;
     successModalMessage.textContent = message;
-    successModalOverlay.style.display = 'block';
+    successModalOverlay.style.display = 'flex'; // Use flex to center
     successModalOverlay.classList.add('active'); // For animation
 }
 
@@ -342,8 +348,7 @@ async function confirmSellCard() {
         console.log(`Sold ${currentRolledCard.title} for ${formatCurrency(currentRolledCard.value)}.`);
         showSuccessModal("Card Sold!", `You sold ${currentRolledCard.title} for ${formatCurrency(currentRolledCard.value)}!`);
 
-        // Hide card details and return to main view after success modal is closed
-        // This will be handled by the success modal's OK button
+        // No need to hide card details here, it will be handled by the success modal's OK button
     } else {
         showSuccessModal("Error", "You don't have this card to sell!");
     }
@@ -375,7 +380,7 @@ function showSellAllModal() {
     });
 
     sellAllPotentialEarnings.textContent = formatCurrency(totalEarnings);
-    sellAllModalOverlay.style.display = 'block';
+    sellAllModalOverlay.style.display = 'flex'; // Use flex to center
     sellAllModalOverlay.classList.add('active'); // For animation
 }
 
@@ -408,7 +413,7 @@ async function confirmSellAllCards() {
 
 async function startRollingAnimation() {
     // Ensure critical DOM elements are present
-    const requiredElements = [rollButton, cardDisplay, rollingCardAnimation, backButton, sellCardButton, initialRollMessage];
+    const requiredElements = [rollButton, cardDisplay, rollingCardAnimation, rollAgainButton, sellCardButton, initialRollMessage];
     if (requiredElements.some(el => el === null)) {
         console.error("One or more required DOM elements for rolling animation are missing in HTML.");
         return;
@@ -430,18 +435,18 @@ async function startRollingAnimation() {
     let animationInterval = setInterval(() => {
         const randomIndex = Math.floor(Math.random() * cardsForAnimation.length);
         rollingCardAnimation.innerHTML = `<img src="${cardsForAnimation[randomIndex].image}" class="rolling-card-image" alt="Rolling Card">`;
-    }, 100); // Change image every 100ms
+    }, 80); // Faster interval for more intense roll
 
     // Stop animation after a few seconds and display the rolled card
     setTimeout(() => {
         clearInterval(animationInterval);
         stopRollingAnimationAndDisplayCard();
-    }, 3000); // Roll for 3 seconds
+    }, 3500); // Roll for 3.5 seconds for more anticipation
 }
 
 async function stopRollingAnimationAndDisplayCard() {
     // Ensure critical DOM elements are present
-    const requiredElements = [cardImage, cardTitle, cardRarity, cardValue, rarityRibbon, rollingCardAnimation, cardDisplay, cardValueDisplay, cardValueDescription, rollButton, backButton, sellCardButton];
+    const requiredElements = [cardImage, cardTitle, cardRarity, cardValue, rarityRibbon, rollingCardAnimation, cardDisplay, cardValueDisplay, cardValueDescription, rollButton, rollAgainButton, sellCardButton];
     if (requiredElements.some(el => el === null)) {
         console.error("One or more required DOM elements for card display after roll are missing in HTML.");
         return;
@@ -467,7 +472,7 @@ async function stopRollingAnimationAndDisplayCard() {
         rarityRibbon.className = `rarity-ribbon ${rolledCard.rarity.toLowerCase()}`; // Add rarity class to ribbon
 
         // Add to inventory
-        if (userInventory[rolledCard.id]) {
+        if (userInventory && userInventory.hasOwnProperty(rolledCard.id)) {
             userInventory[rolledCard.id].count++;
         } else {
             userInventory[rolledCard.id] = { ...rolledCard, count: 1 };
@@ -479,7 +484,7 @@ async function stopRollingAnimationAndDisplayCard() {
         cardValueDescription.textContent = 'This card has been added to your inventory!';
 
         // Enable roll button again
-        rollButton.disabled = false;
+        rollButton.disabled = false; // The initial roll button should be re-enabled if it's the one we're seeing
 
         saveUserData(); // Save inventory after a roll
     } catch (error) {
@@ -499,7 +504,7 @@ function backToMainView() {
 document.addEventListener('DOMContentLoaded', () => {
     // Add null checks for elements before adding event listeners
     if (rollButton) rollButton.addEventListener('click', startRollingAnimation);
-    if (backButton) backButton.addEventListener('click', backToMainView);
+    if (rollAgainButton) rollAgainButton.addEventListener('click', startRollingAnimation); // "Roll Again" button now triggers roll
     if (sellCardButton) sellCardButton.addEventListener('click', sellCard);
     if (sellAllButton) sellAllButton.addEventListener('click', showSellAllModal);
 
@@ -527,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // NEW: Success Modal Listeners
+    // Success Modal Listeners
     if (successModalOkButton) successModalOkButton.addEventListener('click', () => {
         hideSuccessModal();
         backToMainView(); // Return to main view after success message
@@ -550,4 +555,3 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchAllCardsForAnimation(); // Load all cards for the animation
     setRollerDisplayState('initial'); // Set initial display state
 });
-
