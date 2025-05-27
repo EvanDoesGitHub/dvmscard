@@ -26,6 +26,11 @@
 
     /* Custom gradient for the DVMS logo text */
     --logo-gradient: linear-gradient(90deg, #00e576 0%, #00b84f 25%, #00e576 50%, #00b84f 75%, #00e576 100%);
+
+    /* New gradient for the timer background */
+    --timer-bg-gradient: linear-gradient(135deg, #1c1f23 0%, #2a2d32 100%);
+    /* New border gradient for the timer */
+    --timer-border-gradient: linear-gradient(45deg, #00e576 0%, #00b84f 50%, #00e576 100%);
 }
 
 body {
@@ -91,6 +96,20 @@ body {
     0% { text-shadow: 0 0 8px var(--stake-border-glow-light), 0 0 15px rgba(0, 229, 118, 0.4); }
     50% { text-shadow: 0 0 12px var(--stake-border-glow-light), 0 0 25px rgba(0, 229, 118, 0.6); }
     100% { text-shadow: 0 0 8px var(--stake-border-glow-light), 0 0 15px rgba(0, 229, 118, 0.4); }
+}
+
+/* Keyframes for the timer border glow */
+@keyframes timer-border-glow {
+    0% { border-color: rgba(0, 229, 118, 0.2); box-shadow: 0 0 5px rgba(0, 229, 118, 0.1); }
+    50% { border-color: rgba(0, 229, 118, 0.5); box-shadow: 0 0 15px rgba(0, 229, 118, 0.3); }
+    100% { border-color: rgba(0, 229, 118, 0.2); box-shadow: 0 0 5px rgba(0, 229, 118, 0.1); }
+}
+
+/* Keyframes for the subtle ticking animation of timer digits */
+@keyframes timer-tick {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.02); opacity: 0.95; }
+    100% { transform: scale(1); opacity: 1; }
 }
 
 
@@ -649,6 +668,73 @@ h1 {
 }
 .card-value-details p {
     margin: 0;
+}
+
+/* Roll Limit Container Styling */
+#roll-limit-container {
+    background: var(--timer-bg-gradient);
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-top: 20px;
+    margin-bottom: 25px; /* Space between timer and button */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden; /* For the pseudo-element border */
+    border: 2px solid transparent; /* Initial transparent border */
+    box-shadow: 0 0 10px rgba(0,0,0,0.3); /* Initial subtle shadow */
+}
+
+/* Animated border for the timer */
+#roll-limit-container .timer-border {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 12px;
+    padding: 2px; /* Controls border thickness inside the padding-box */
+    background: var(--timer-border-gradient);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none; /* Allows clicks to pass through */
+    animation: timer-border-glow 2s infinite alternate ease-in-out;
+}
+
+
+#roll-limit-container .rolls-info {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--stake-text-light);
+    text-shadow: 0 0 3px rgba(0, 229, 118, 0.2);
+}
+
+#roll-limit-container .rolls-info span {
+    color: var(--stake-green-primary);
+    font-weight: 700;
+}
+
+#roll-limit-container .cooldown-timer {
+    font-size: 1.3em;
+    font-weight: 800;
+    color: var(--stake-green-primary);
+    text-shadow: 0 0 8px var(--stake-border-glow-light);
+    display: flex; /* For individual digit animation */
+    gap: 2px;
+}
+
+#roll-limit-container .cooldown-timer span {
+    /* Apply ticking animation to individual digits */
+    display: inline-block; /* Essential for transform to work */
+    animation: timer-tick 1s linear infinite alternate; /* Subtle ticking */
+}
+#roll-limit-container .cooldown-timer span:nth-child(even) {
+    animation-delay: 0.5s; /* Stagger animation for more organic feel */
 }
 
 
