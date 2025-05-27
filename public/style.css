@@ -6,7 +6,7 @@
 /* Define Stake-like color palette for easier management and consistency */
 :root {
     --stake-green-primary: #00e576; /* Bright, vibrant green */
-    --stake-green-secondary: #00c853; /* Slightly darker green for gradients */
+    --stake-green-secondary: #00b84f; /* Slightly darker green for gradients */
     --stake-dark-blue-bg: #1a1b1e; /* Deep blue-grey background */
     --stake-medium-dark-bg: #222529; /* Slightly lighter dark background for sections */
     --stake-lighter-dark-bg: #2b2e32; /* Even lighter dark background for elements */
@@ -144,7 +144,7 @@ body {
 
 .content-area {
     flex-grow: 1;
-    background: var(--gradient-secondary-dark); /* Using new gradient */
+    background: var(--gradient-secondary-dark);
     border-radius: 15px;
     padding: 20px;
     box-shadow: 0 0 15px var(--stake-border-glow-dark);
@@ -281,7 +281,7 @@ body {
 }
 
 .content-section {
-    background: var(--gradient-secondary-dark); /* Using new gradient */
+    background: var(--gradient-secondary-dark);
     border-radius: 15px;
     animation: glowing-border 3s infinite alternate ease-in-out;
     position: relative;
@@ -324,7 +324,7 @@ body {
     max-height: calc(100% - 100px);
     overflow-y: auto;
     padding-right: 10px;
-    display: grid;
+    display: grid; /* Default to grid for cards */
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 15px;
     justify-items: center;
@@ -332,7 +332,16 @@ body {
     padding-bottom: 10px;
 }
 
-.inventory-list .empty-inventory-message {
+/* Style for when inventory is empty - make it a flex container to center the message */
+.inventory-list.empty-state {
+    display: flex; /* Override grid to use flex */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    text-align: center;
+    flex-direction: column; /* Ensure it's a column for text */
+}
+
+.empty-inventory-message {
     color: var(--stake-text-medium);
     font-style: italic;
     text-align: center;
@@ -340,12 +349,11 @@ body {
     width: 100%;
     line-height: 1.6;
     font-size: 0.95em;
-    display: flex;
+    flex-grow: 1; /* Allow it to take available space for centering */
+    display: flex; /* Ensure it's a flex item to be centered */
     justify-content: center;
     align-items: center;
-    flex-grow: 1;
-    height: 100%;
-    margin: 0;
+    margin: 0; /* Remove default paragraph margins */
 }
 
 
@@ -382,7 +390,7 @@ body {
     overflow: hidden;
     position: relative;
     padding-bottom: 5px;
-    cursor: pointer; /* Indicate clickability */
+    cursor: pointer;
 }
 
 .inventory-card:hover {
@@ -406,12 +414,11 @@ body {
     width: 100%;
     flex-grow: 1;
     justify-content: center;
-    /* Ensure text wraps and doesn't overflow, but is limited */
     word-wrap: break-word;
     overflow-wrap: break-word;
     white-space: normal;
-    overflow: hidden; /* Hide anything that overflows */
-    text-overflow: ellipsis; /* Add ellipsis for overflowed text */
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .inventory-card-info span {
@@ -429,14 +436,13 @@ body {
     color: var(--stake-green-primary);
     font-size: 0.8em;
     margin-bottom: 2px;
-    /* Force to one line with ellipsis if too long */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .inventory-card-rarity {
-    font-size: 0.7em; /* Slightly larger for rarity */
+    font-size: 0.7em;
     color: var(--stake-text-medium);
     margin-bottom: 2px;
     white-space: nowrap;
@@ -444,7 +450,6 @@ body {
     text-overflow: ellipsis;
 }
 
-/* Rarity specific colors for inventory cards */
 .inventory-card-rarity.common { color: #a0a0a0; }
 .inventory-card-rarity.uncommon { color: var(--stake-green-primary); }
 .inventory-card-rarity.rare { color: #00b0ff; }
@@ -513,7 +518,6 @@ h1 {
     opacity: 1;
 }
 
-/* Card reveal animation for the final displayed card */
 #card-display.reveal-animation {
     animation: cardReveal 0.6s ease-out forwards;
 }
@@ -523,7 +527,7 @@ h1 {
     height: 100%;
     object-fit: cover;
     border-radius: 15px;
-    animation: rolling-animation 0.1s infinite linear; /* Faster animation for more blur/movement */
+    animation: rolling-animation 0.1s infinite linear;
 }
 
 @keyframes rolling-animation {
@@ -630,7 +634,7 @@ h1 {
 
 .action-button {
     padding: 18px 40px;
-    background: var(--gradient-primary); /* Using new gradient */
+    background: var(--gradient-primary);
     color: white;
     border: none;
     border-radius: 12px;
@@ -646,7 +650,7 @@ h1 {
 }
 
 .action-button:hover {
-    background: var(--gradient-primary-hover); /* Using new gradient hover */
+    background: var(--gradient-primary-hover);
     transform: translateY(-3px);
     box-shadow: 0 8px 20px var(--stake-border-glow-light), 0 0 12px var(--stake-border-glow-medium);
 }
@@ -665,11 +669,11 @@ h1 {
 }
 
 .action-button.sell-button {
-    background: var(--gradient-red-sell); /* Using new gradient */
+    background: var(--gradient-red-sell);
     box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3), 0 0 8px rgba(231, 76, 60, 0.2);
 }
 .action-button.sell-button:hover {
-    background: var(--gradient-red-sell-hover); /* Using new gradient hover */
+    background: var(--gradient-red-sell-hover);
     box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4), 0 0 12px rgba(231, 76, 60, 0.3);
 }
 
@@ -711,7 +715,7 @@ h1 {
 }
 
 
-/* Modal Overlay and Content - Centralized */
+/* Modal Overlay and Content - Centralized and Improved Border */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -741,10 +745,11 @@ h1 {
     text-align: center;
     box-shadow: 0 0 30px var(--stake-border-glow-light);
     animation: glowing-border 3s infinite alternate ease-in-out;
-    border: 2px solid transparent;
+    /* Increased border width for modals */
+    border: 4px solid transparent; /* Increased from 2px to 4px */
     background-origin: border-box;
     background-clip: padding-box, border-box;
-    background-image: var(--gradient-secondary-dark), /* Using new gradient */
+    background-image: var(--gradient-secondary-dark),
                       linear-gradient(45deg, var(--stake-green-primary) 0%, rgba(0,229,118,0.2) 50%, var(--stake-green-primary) 100%);
     position: relative;
     transform: translateY(-50px);
@@ -927,7 +932,7 @@ h1 {
         grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     }
     .inventory-card {
-        height: 170px; /* Maintained for smaller screens */
+        height: 170px;
     }
 }
 
@@ -1098,7 +1103,7 @@ h1 {
     }
     .inventory-card {
         width: 80px;
-        height: 130px; /* Further reduced height for small screens */
+        height: 130px;
     }
     .inventory-card-image {
         width: 60px;
