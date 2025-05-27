@@ -16,6 +16,13 @@
     --stake-border-glow-medium: rgba(0, 229, 118, 0.2); /* Medium glow */
     --stake-border-glow-dark: rgba(0, 229, 118, 0.08); /* Subtle glow */
     --stake-text-glow: rgba(0, 229, 118, 0.6); /* Text glow for prominent elements */
+
+    /* NEW/IMPROVED Gradients for more dynamic feel */
+    --gradient-primary: linear-gradient(135deg, #00e576 0%, #00b84f 100%); /* Stronger green */
+    --gradient-primary-hover: linear-gradient(135deg, #00b84f 0%, #00e576 100%);
+    --gradient-secondary-dark: linear-gradient(135deg, #2a2d32 0%, #1c1f23 100%); /* Darker, richer bg */
+    --gradient-red-sell: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    --gradient-red-sell-hover: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
 }
 
 body {
@@ -23,7 +30,8 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    background: radial-gradient(circle at center, var(--stake-medium-dark-bg) 0%, var(--stake-dark-blue-bg) 100%);
+    /* Updated background with a more dynamic feel */
+    background: radial-gradient(circle at center, #1b2025 0%, #111417 100%);
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -31,11 +39,11 @@ body {
     overflow-x: hidden;
 }
 
-/* Keyframes for the animated glowing border - softer, more diffused */
+/* Keyframes for the animated glowing border - even more prominent */
 @keyframes glowing-border {
-    0% { box-shadow: 0 0 15px var(--stake-border-glow-dark), 0 0 5px rgba(0,0,0,0.3); }
-    50% { box-shadow: 0 0 25px var(--stake-border-glow-medium), 0 0 10px rgba(0,0,0,0.5); }
-    100% { box-shadow: 0 0 15px var(--stake-border-glow-dark), 0 0 5px rgba(0,0,0,0.3); }
+    0% { box-shadow: 0 0 10px var(--stake-border-glow-dark), 0 0 20px var(--stake-border-glow-medium); }
+    50% { box-shadow: 0 0 20px var(--stake-border-glow-medium), 0 0 40px var(--stake-border-glow-light); }
+    100% { box-shadow: 0 0 10px var(--stake-border-glow-dark), 0 0 20px var(--stake-border-glow-medium); }
 }
 
 /* Keyframes for inventory card entry animation */
@@ -46,13 +54,13 @@ body {
 
 /* Keyframes for modal entry/exit */
 @keyframes modalFadeIn {
-    from { opacity: 0; transform: translateY(-50px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(-50px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes modalFadeOut {
-    from { opacity: 1; transform: translateY(0); }
-    to { opacity: 0; transform: translateY(-50px); }
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(-50px) scale(0.95); }
 }
 
 /* Keyframes for success modal pop effect */
@@ -60,6 +68,13 @@ body {
     0% { transform: scale(0.5); opacity: 0; }
     50% { transform: scale(1.1); opacity: 1; }
     100% { transform: scale(1); opacity: 1; }
+}
+
+/* Keyframes for card reveal animation */
+@keyframes cardReveal {
+    0% { transform: scale(0.8) rotateY(-90deg); opacity: 0; filter: brightness(0.5); }
+    60% { transform: scale(1.05) rotateY(10deg); opacity: 1; filter: brightness(1.2); }
+    100% { transform: scale(1) rotateY(0deg); opacity: 1; filter: brightness(1); }
 }
 
 
@@ -96,8 +111,8 @@ body {
 }
 
 .logo-link {
-    text-decoration: none; /* Remove underline from link */
-    display: flex; /* Allow flex properties for alignment of text */
+    text-decoration: none;
+    display: flex;
     align-items: center;
 }
 
@@ -125,13 +140,11 @@ body {
     width: 100%;
     margin: 0 auto;
     padding: 20px;
-    /* Removed gap as sidebar is gone */
 }
 
-/* Content area for the home page, now spanning full width */
 .content-area {
     flex-grow: 1;
-    background-color: var(--stake-medium-dark-bg);
+    background: var(--gradient-secondary-dark); /* Using new gradient */
     border-radius: 15px;
     padding: 20px;
     box-shadow: 0 0 15px var(--stake-border-glow-dark);
@@ -139,16 +152,15 @@ body {
     border: 2px solid transparent;
     background-origin: border-box;
     background-clip: padding-box, border-box;
-    background-image: linear-gradient(to bottom, var(--stake-medium-dark-bg), var(--stake-medium-dark-bg)),
+    background-image: var(--gradient-secondary-dark),
                       linear-gradient(45deg, var(--stake-green-primary) 0%, rgba(0,229,118,0.2) 50%, var(--stake-green-primary) 100%);
     display: flex;
     flex-direction: column;
 }
 
-/* Specific class for full width content area on homepage */
 .content-area.full-width-content {
-    width: 100%; /* Ensure it takes full available width */
-    max-width: none; /* Override max-width if inherited from previous layout */
+    width: 100%;
+    max-width: none;
 }
 
 
@@ -256,10 +268,9 @@ body {
     top: 0;
 }
 
-/* Main container for the entire application (inventory + roller + balance) */
 .main-app-container {
     display: grid;
-    grid-template-columns: 1.2fr 1fr 0.8fr; /* Adjusted column widths */
+    grid-template-columns: 1.2fr 1fr 0.8fr;
     gap: 20px;
     max-width: 1300px;
     width: 100%;
@@ -269,9 +280,8 @@ body {
     margin: 20px auto;
 }
 
-/* Base style for all content sections (inventory, roller, balance) */
 .content-section {
-    background-color: var(--stake-medium-dark-bg);
+    background: var(--gradient-secondary-dark); /* Using new gradient */
     border-radius: 15px;
     animation: glowing-border 3s infinite alternate ease-in-out;
     position: relative;
@@ -284,11 +294,10 @@ body {
     border: 2px solid transparent;
     background-origin: border-box;
     background-clip: padding-box, border-box;
-    background-image: linear-gradient(to bottom, var(--stake-medium-dark-bg), var(--stake-medium-dark-bg)),
+    background-image: var(--gradient-secondary-dark),
                       linear-gradient(45deg, var(--stake-green-primary) 0%, rgba(0,229,118,0.2) 50%, var(--stake-green-primary) 100%);
 }
 
-/* Specific styling for the Inventory Container */
 .inventory-container {
     grid-column: 1;
     padding: 25px;
@@ -312,18 +321,17 @@ body {
 .inventory-list {
     width: 100%;
     flex-grow: 1;
-    max-height: calc(100% - 100px); /* Adjust for sell all button */
+    max-height: calc(100% - 100px);
     overflow-y: auto;
     padding-right: 10px;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 15px;
-    justify-items: center; /* Center items within their grid cell */
-    align-content: start; /* Align grid tracks to the start of the container */
-    padding-bottom: 10px; /* Add some padding at the bottom for scrolling */
+    justify-items: center;
+    align-content: start;
+    padding-bottom: 10px;
 }
 
-/* Style for when inventory is empty */
 .inventory-list .empty-inventory-message {
     color: var(--stake-text-medium);
     font-style: italic;
@@ -341,7 +349,6 @@ body {
 }
 
 
-/* Custom scrollbar for inventory list (more subtle Stake.com style) */
 .inventory-list::-webkit-scrollbar {
     width: 6px;
 }
@@ -370,11 +377,12 @@ body {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 110px; /* Max width for individual cards */
-    height: 210px; /* Increased height to fit name, rarity, and price */
-    overflow: hidden; /* Hide overflow if text is too long */
+    max-width: 110px;
+    height: 170px; /* Reduced height to fit only name and rarity well */
+    overflow: hidden;
     position: relative;
-    padding-bottom: 5px; /* Adjust padding to make space for text */
+    padding-bottom: 5px;
+    cursor: pointer; /* Indicate clickability */
 }
 
 .inventory-card:hover {
@@ -382,7 +390,7 @@ body {
     box-shadow: 0 5px 12px var(--stake-border-glow-medium);
 }
 
-.inventory-card-image { /* Specific class for inventory card image */
+.inventory-card-image {
     width: 90px;
     height: 126px;
     object-fit: cover;
@@ -396,12 +404,14 @@ body {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    flex-grow: 1; /* Allow info to take remaining space */
-    justify-content: center; /* Center content vertically */
-    /* Ensure text wraps and doesn't overflow */
+    flex-grow: 1;
+    justify-content: center;
+    /* Ensure text wraps and doesn't overflow, but is limited */
     word-wrap: break-word;
     overflow-wrap: break-word;
     white-space: normal;
+    overflow: hidden; /* Hide anything that overflows */
+    text-overflow: ellipsis; /* Add ellipsis for overflowed text */
 }
 
 .inventory-card-info span {
@@ -409,41 +419,40 @@ body {
     font-size: 0.7em;
     color: var(--stake-text-light);
     text-align: center;
-    width: 100%; /* Ensure it takes full width */
-    padding: 0 2px; /* Small horizontal padding */
-    line-height: 1.2; /* Adjust line height for better spacing */
+    width: 100%;
+    padding: 0 2px;
+    line-height: 1.2;
 }
 
 .inventory-card-title {
     font-weight: 600;
     color: var(--stake-green-primary);
-    font-size: 0.8em; /* Slightly larger for title */
+    font-size: 0.8em;
     margin-bottom: 2px;
+    /* Force to one line with ellipsis if too long */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.inventory-card-rarity { /* Rarity text */
-    font-size: 0.65em;
+.inventory-card-rarity {
+    font-size: 0.7em; /* Slightly larger for rarity */
     color: var(--stake-text-medium);
     margin-bottom: 2px;
-}
-
-.inventory-card-value { /* Value text */
-    font-size: 0.65em;
-    font-weight: 500;
-    color: var(--stake-text-light);
-    margin-bottom: 5px; /* Space before button */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Rarity specific colors for inventory cards */
 .inventory-card-rarity.common { color: #a0a0a0; }
-.inventory-card-rarity.uncommon { color: var(--stake-green-primary); } /* Primary green */
-.inventory-card-rarity.rare { color: #00b0ff; } /* Blue */
-.inventory-card-rarity.epic { color: #9c27b0; } /* Purple */
-.inventory-card-rarity.legendary { color: #ffeb3b; } /* Yellow */
+.inventory-card-rarity.uncommon { color: var(--stake-green-primary); }
+.inventory-card-rarity.rare { color: #00b0ff; }
+.inventory-card-rarity.epic { color: #9c27b0; }
+.inventory-card-rarity.legendary { color: #ffeb3b; }
 
 
-/* Style for the duplicate card count (x2, x3, etc.) */
-.card-count-overlay { /* Changed from card-count to avoid conflict with main card info */
+.card-count-overlay {
     position: absolute;
     top: 5px;
     right: 5px;
@@ -458,7 +467,6 @@ body {
 }
 
 
-/* Roller Container Styling - explicitly in the middle column */
 .roller-container {
     grid-column: 2;
     max-width: 480px;
@@ -470,7 +478,7 @@ body {
     align-items: center;
 }
 
-h1 { /* This is for the card game page */
+h1 {
     color: var(--stake-green-primary);
     margin-bottom: 30px;
     font-size: 2.5em;
@@ -481,7 +489,6 @@ h1 { /* This is for the card game page */
     text-align: center;
 }
 
-/* Common style for all card display areas (initial, rolling, final) */
 .card-display-area {
     width: 220px;
     height: 308px;
@@ -495,39 +502,40 @@ h1 { /* This is for the card game page */
     position: relative;
     animation: glowing-border 3s infinite alternate ease-in-out;
     flex-shrink: 0;
-    margin-bottom: 25px; /* Space between card area and buttons */
+    margin-bottom: 25px;
 }
 
-/* Image inside any card display area */
 .card-display-area .card-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
     border-radius: 15px;
-    opacity: 1; /* Ensure images are visible */
+    opacity: 1;
 }
 
-/* Specific styling for the rolling animation container */
+/* Card reveal animation for the final displayed card */
+#card-display.reveal-animation {
+    animation: cardReveal 0.6s ease-out forwards;
+}
+
 #rolling-card-animation .rolling-card-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
     border-radius: 15px;
-    animation: rolling-animation 0.5s infinite linear; /* Apply animation directly */
+    animation: rolling-animation 0.1s infinite linear; /* Faster animation for more blur/movement */
 }
 
-/* Animation for rolling - enhanced */
 @keyframes rolling-animation {
-    0% { transform: scale(1) rotateY(0deg); opacity: 1; }
-    50% { transform: scale(1.05) rotateY(180deg); opacity: 0.8; }
-    100% { transform: scale(1) rotateY(360deg); opacity: 1; }
+    0% { transform: scale(1) rotateY(0deg); opacity: 1; filter: blur(0px); }
+    50% { transform: scale(1.02) rotateY(180deg); opacity: 0.9; filter: blur(0.5px); }
+    100% { transform: scale(1) rotateY(360deg); opacity: 1; filter: blur(0px); }
 }
 
-/* Rarity Ribbon */
 .rarity-ribbon {
     position: absolute;
     top: 10px;
-    left: -30px; /* Adjust to move outside initially */
+    left: -30px;
     width: 150px;
     background-color: var(--stake-green-primary);
     color: var(--stake-dark-blue-bg);
@@ -542,21 +550,19 @@ h1 { /* This is for the card game page */
     text-transform: uppercase;
 }
 
-/* Rarity Ribbon Colors */
 .rarity-ribbon.common { background-color: #a0a0a0; }
 .rarity-ribbon.uncommon { background-color: var(--stake-green-primary); }
 .rarity-ribbon.rare { background-color: #00b0ff; }
 .rarity-ribbon.epic { background-color: #9c27b0; }
-.rarity-ribbon.legendary { background-color: #ffeb3b; color: var(--stake-dark-blue-bg); } /* Legendary text color */
+.rarity-ribbon.legendary { background-color: #ffeb3b; color: var(--stake-dark-blue-bg); }
 
 
-/* Card info for the main display */
 #card-display .card-info {
-    position: absolute; /* Position info over the image */
-    bottom: 0; /* Align to bottom */
+    position: absolute;
+    bottom: 0;
     left: 0;
     width: 100%;
-    background: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
+    background: rgba(0, 0, 0, 0.7);
     padding: 10px;
     text-align: center;
     color: var(--stake-text-light);
@@ -588,7 +594,6 @@ h1 { /* This is for the card game page */
     font-weight: 600;
 }
 
-/* Rarity colors for main card display */
 #card-display .card-rarity.common { color: #a0a0a0; }
 #card-display .card-rarity.uncommon { color: var(--stake-green-primary); }
 #card-display .card-rarity.rare { color: #00b0ff; }
@@ -596,55 +601,52 @@ h1 { /* This is for the card game page */
 #card-display .card-rarity.legendary { color: #ffeb3b; }
 
 
-/* Card Value Details below the main card display */
 .card-value-details {
     width: 100%;
     text-align: center;
     font-size: 1em;
-    min-height: 40px; /* Ensure some space */
-    display: flex; /* Use flex to center content */
+    min-height: 40px;
+    display: flex;
     flex-direction: column;
     justify-content: center;
     padding: 10px;
     color: var(--stake-text-medium);
     font-weight: 500;
-    margin-top: 0; /* Remove top margin as it's part of the main roller container */
+    margin-top: 0;
 }
 .card-value-details p {
     margin: 0;
 }
 
 
-/* Action Buttons Container */
 .action-buttons {
     display: flex;
-    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+    flex-wrap: wrap;
     justify-content: center;
-    gap: 15px; /* Space between buttons */
-    margin-top: 20px; /* Space from card display above */
+    gap: 15px;
+    margin-top: 20px;
     width: 100%;
 }
 
-/* General Action Button Styling (Roll, Sell All, Confirm Sell) */
 .action-button {
     padding: 18px 40px;
-    background: linear-gradient(45deg, var(--stake-green-primary), var(--stake-green-secondary));
+    background: var(--gradient-primary); /* Using new gradient */
     color: white;
     border: none;
     border-radius: 12px;
     font-size: 1.3em;
     font-weight: 800;
     cursor: pointer;
-    transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.3s ease-in-out;
+    transition: background 0.3s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.3s ease-in-out;
     box-shadow: 0 5px 15px var(--stake-border-glow-medium), 0 0 8px var(--stake-border-glow-dark);
     outline: none;
     text-transform: uppercase;
     letter-spacing: 1px;
-    flex-shrink: 0; /* Prevent buttons from shrinking too much */
+    flex-shrink: 0;
 }
 
 .action-button:hover {
-    background: linear-gradient(45deg, var(--stake-green-secondary), var(--stake-green-primary));
+    background: var(--gradient-primary-hover); /* Using new gradient hover */
     transform: translateY(-3px);
     box-shadow: 0 8px 20px var(--stake-border-glow-light), 0 0 12px var(--stake-border-glow-medium);
 }
@@ -662,17 +664,15 @@ h1 { /* This is for the card game page */
     transform: translateY(0);
 }
 
-/* Sell Button specific styling */
 .action-button.sell-button {
-    background: linear-gradient(45deg, #e74c3c, #c0392b); /* Reddish gradient */
+    background: var(--gradient-red-sell); /* Using new gradient */
     box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3), 0 0 8px rgba(231, 76, 60, 0.2);
 }
 .action-button.sell-button:hover {
-    background: linear-gradient(45deg, #c0392b, #e74c3c);
+    background: var(--gradient-red-sell-hover); /* Using new gradient hover */
     box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4), 0 0 12px rgba(231, 76, 60, 0.3);
 }
 
-/* Cancel Button specific styling */
 .action-button.cancel-button {
     background: linear-gradient(45deg, #444, #333);
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
@@ -683,7 +683,6 @@ h1 { /* This is for the card game page */
 }
 
 
-/* Balance Container Styling (for card game page) */
 .balance-container {
     grid-column: 3;
     display: flex;
@@ -703,7 +702,7 @@ h1 { /* This is for the card game page */
     text-transform: uppercase;
 }
 
-.balance-display { /* Applied to both header and bottom balance displays */
+.balance-display {
     font-size: 2.5em;
     font-weight: 800;
     color: var(--stake-text-light);
@@ -712,7 +711,7 @@ h1 { /* This is for the card game page */
 }
 
 
-/* Modal Overlay and Content */
+/* Modal Overlay and Content - Centralized */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -730,7 +729,7 @@ h1 { /* This is for the card game page */
     transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
 }
 
-.modal-overlay.active { /* Class added by JS for active state */
+.modal-overlay.active {
     opacity: 1;
     visibility: visible;
 }
@@ -745,21 +744,20 @@ h1 { /* This is for the card game page */
     border: 2px solid transparent;
     background-origin: border-box;
     background-clip: padding-box, border-box;
-    background-image: linear-gradient(to bottom, var(--stake-medium-dark-bg), var(--stake-medium-dark-bg)),
+    background-image: var(--gradient-secondary-dark), /* Using new gradient */
                       linear-gradient(45deg, var(--stake-green-primary) 0%, rgba(0,229,118,0.2) 50%, var(--stake-green-primary) 100%);
-    position: relative; /* For close button positioning */
-    transform: translateY(-50px); /* Initial position for animation */
-    opacity: 0; /* Initial opacity for animation */
-    transition: transform 0.3s ease-out, opacity 0.3s ease-out; /* Animation properties */
+    position: relative;
+    transform: translateY(-50px);
+    opacity: 0;
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
 }
 
 .modal-overlay.active .modal-content {
-    animation: modalFadeIn 0.3s forwards; /* Apply entry animation */
+    animation: modalFadeIn 0.3s forwards;
 }
 
-/* Success Modal specific animation */
 #success-modal-overlay.active .modal-content {
-    animation: successPop 0.4s forwards; /* Apply pop animation */
+    animation: successPop 0.4s forwards;
 }
 
 
@@ -846,7 +844,6 @@ h1 { /* This is for the card game page */
     gap: 15px;
 }
 
-/* Sell All Cards List in Modal */
 .sell-all-cards-list {
     max-height: 200px;
     overflow-y: auto;
@@ -886,17 +883,10 @@ h1 { /* This is for the card game page */
 }
 
 @media (max-width: 1024px) {
-    /* Main Layout for the Home Page */
     .main-layout {
         padding: 10px;
     }
     .content-area {
-        border-radius: 15px;
-        box-shadow: 0 0 15px var(--stake-border-glow-dark);
-        animation: glowing-border 3s infinite alternate ease-in-out;
-        border: 2px solid transparent;
-        background-image: linear-gradient(to bottom, var(--stake-medium-dark-bg), var(--stake-medium-dark-bg)),
-                      linear-gradient(45deg, var(--stake-green-primary) 0%, rgba(0,229,118,0.2) 50%, var(--stake-green-primary) 100%);
         padding: 20px;
     }
     .game-grid {
@@ -917,28 +907,27 @@ h1 { /* This is for the card game page */
         font-size: 0.7em;
     }
 
-    /* Existing game page responsiveness */
     .main-app-container {
-        grid-template-columns: 1fr; /* Stack columns on smaller screens */
+        grid-template-columns: 1fr;
         justify-content: center;
         gap: 20px;
         padding: 20px;
     }
     .inventory-container, .roller-container, .balance-container {
-        max-width: 480px; /* Constrain width for better readability */
+        max-width: 480px;
         width: 100%;
-        margin: 0 auto; /* Center individual sections */
+        margin: 0 auto;
     }
     .inventory-container {
         padding: 40px;
-        height: auto; /* Allow height to adjust */
+        height: auto;
     }
     .inventory-list {
-        max-height: 400px; /* Max height for scrolling */
+        max-height: 400px;
         grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     }
     .inventory-card {
-        height: 210px; /* Maintain increased height */
+        height: 170px; /* Maintained for smaller screens */
     }
 }
 
@@ -970,7 +959,6 @@ h1 { /* This is for the card game page */
         padding: 8px;
     }
 
-    /* Existing game page responsiveness */
     .roller-container, .inventory-container, .balance-container {
         padding: 30px;
     }
@@ -999,7 +987,7 @@ h1 { /* This is for the card game page */
     }
     .inventory-card {
         width: 90px;
-        height: 170px; /* Adjust height for smaller screens */
+        height: 150px;
     }
     .inventory-card-image {
         width: 70px;
@@ -1019,10 +1007,9 @@ h1 { /* This is for the card game page */
     }
 }
 
-/* On very small screens, remove glow and borders for better performance and clean look */
 @media (max-width: 600px) {
     body {
-        background: var(--stake-dark-blue-bg); /* Solid background on small screens */
+        background: var(--stake-dark-blue-bg);
     }
     .main-header, .game-page-header {
         padding: 8px 10px;
@@ -1069,7 +1056,6 @@ h1 { /* This is for the card game page */
         font-size: 0.65em;
     }
 
-    /* Existing game page responsiveness */
     .roller-container, .inventory-container, .balance-container {
         padding: 20px;
         border-radius: 0;
@@ -1112,7 +1098,7 @@ h1 { /* This is for the card game page */
     }
     .inventory-card {
         width: 80px;
-        height: 150px; /* Adjust height for smallest screens */
+        height: 130px; /* Further reduced height for small screens */
     }
     .inventory-card-image {
         width: 60px;
