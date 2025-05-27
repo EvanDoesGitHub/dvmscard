@@ -44,6 +44,25 @@ body {
     100% { opacity: 1; transform: translateY(0); }
 }
 
+/* Keyframes for modal entry/exit */
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-50px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes modalFadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-50px); }
+}
+
+/* Keyframes for success modal pop effect */
+@keyframes successPop {
+    0% { transform: scale(0.5); opacity: 0; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+
 /* ==================================== */
 /* NEW STYLES FOR HOMEPAGE (index.html) */
 /* ==================================== */
@@ -379,18 +398,20 @@ body {
     width: 100%;
     flex-grow: 1; /* Allow info to take remaining space */
     justify-content: center; /* Center content vertically */
+    /* Ensure text wraps and doesn't overflow */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
 }
 
 .inventory-card-info span {
     margin: 0;
     font-size: 0.7em;
     color: var(--stake-text-light);
-    white-space: normal; /* Allow text to wrap */
-    word-wrap: break-word; /* Break long words */
-    overflow-wrap: break-word;
     text-align: center;
     width: 100%; /* Ensure it takes full width */
     padding: 0 2px; /* Small horizontal padding */
+    line-height: 1.2; /* Adjust line height for better spacing */
 }
 
 .inventory-card-title {
@@ -415,7 +436,7 @@ body {
 
 /* Rarity specific colors for inventory cards */
 .inventory-card-rarity.common { color: #a0a0a0; }
-.inventory-card-rarity.uncommon { color: #00e576; } /* Primary green */
+.inventory-card-rarity.uncommon { color: var(--stake-green-primary); } /* Primary green */
 .inventory-card-rarity.rare { color: #00b0ff; } /* Blue */
 .inventory-card-rarity.epic { color: #9c27b0; } /* Purple */
 .inventory-card-rarity.legendary { color: #ffeb3b; } /* Yellow */
@@ -483,7 +504,6 @@ h1 { /* This is for the card game page */
     height: 100%;
     object-fit: cover;
     border-radius: 15px;
-    /* transition: transform 0.1s ease-in-out, opacity 0.1s ease-in-out; */ /* Removed for rolling animation */
     opacity: 1; /* Ensure images are visible */
 }
 
@@ -710,7 +730,7 @@ h1 { /* This is for the card game page */
     transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
 }
 
-.modal-overlay[style*="display: block"] { /* Force visibility for JS controlled display */
+.modal-overlay.active { /* Class added by JS for active state */
     opacity: 1;
     visibility: visible;
 }
@@ -728,7 +748,20 @@ h1 { /* This is for the card game page */
     background-image: linear-gradient(to bottom, var(--stake-medium-dark-bg), var(--stake-medium-dark-bg)),
                       linear-gradient(45deg, var(--stake-green-primary) 0%, rgba(0,229,118,0.2) 50%, var(--stake-green-primary) 100%);
     position: relative; /* For close button positioning */
+    transform: translateY(-50px); /* Initial position for animation */
+    opacity: 0; /* Initial opacity for animation */
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out; /* Animation properties */
 }
+
+.modal-overlay.active .modal-content {
+    animation: modalFadeIn 0.3s forwards; /* Apply entry animation */
+}
+
+/* Success Modal specific animation */
+#success-modal-overlay.active .modal-content {
+    animation: successPop 0.4s forwards; /* Apply pop animation */
+}
+
 
 .modal-content .close-button {
     position: absolute;
