@@ -830,8 +830,9 @@ h1 {
     grid-column: 3;
     display: flex;
     flex-direction: column;
-    align-items: center; /* Ensures horizontal centering */
-    justify-content: center;
+    /* Updated for full centering */
+    align-items: center; /* Centers horizontally */
+    justify-content: center; /* Centers vertically */
     padding: 30px;
 }
 
@@ -1076,6 +1077,9 @@ h1 {
     }
     .inventory-card-image {
         height: 126px; /* Keep consistent image height */
+    }
+    .inventory-card-sell-button {
+        width: calc(100% - 16px);
     }
 }
 
