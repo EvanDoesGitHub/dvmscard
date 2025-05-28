@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rollingCardAnimation = document.getElementById('rolling-card-animation');
     const rollOutcomeMessage = document.getElementById('roll-outcome-message');
     const inventoryList = document.getElementById('inventory-list');
+    const emptyInventoryMessage = document.querySelector('.empty-inventory-message'); // Corrected selector
     const sellAllButton = document.getElementById('sell-all-button');
 
     // Modals
@@ -69,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rollsRemainingSpan = document.getElementById('rolls-remaining');
     const maxRollsSpan = document.getElementById('max-rolls');
     const cooldownDisplaySpan = document.getElementById('cooldown-display');
+    const cooldownTimerContainer = document.getElementById('roll-limit-container').querySelector('.cooldown-timer'); // Added for hiding/showing
 
     // --- Game State Variables (Persisted in localStorage) ---
     let balance = parseFloat(localStorage.getItem('balance')) || INITIAL_BALANCE;
@@ -188,35 +190,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const now = Date.now();
         if (cooldownEndTime > now) {
+            // Cooldown is active
             rollButton.disabled = true;
             const timeLeft = cooldownEndTime - now;
             cooldownDisplaySpan.textContent = formatTime(timeLeft);
-            cooldownDisplaySpan.parentElement.style.display = 'flex';
+            cooldownTimerContainer.style.display = 'flex'; // Show cooldown timer
             rollOutcomeMessage.textContent = 'Roll limit reached. Next roll in:';
             rollOutcomeMessage.style.color = '#e74c3c';
         } else {
-            // Cooldown has passed or never active.
-            // If rolls were previously maxed, reset them now.
+            // Cooldown has expired or was never active
+            clearInterval(timerInterval); // Stop any running timer
             if (rollsUsed >= MAX_ROLLS_PER_HOUR) {
-                resetRolls(); // This will also call saveGameState() and updateRollsDisplay()
+                // If rolls were used up, but cooldown is now over, reset them
+                resetRolls(); // This will also call saveGameState()
             }
             rollButton.disabled = false;
-            cooldownDisplaySpan.parentElement.style.display = 'none';
-            cooldownDisplaySpan.textContent = '00:00:00';
-            clearInterval(timerInterval);
-            rollOutcomeMessage.textContent = '';
+            cooldownTimerContainer.style.display = 'none'; // Hide cooldown timer
+            cooldownDisplaySpan.textContent = '00:00:00'; // Ensure display is 00:00:00
+            rollOutcomeMessage.textContent = ''; // Clear any previous limit message
             rollOutcomeMessage.style.color = 'var(--stake-text-medium)';
         }
     }
 
-    // New function to manage cooldown: start if needed, or just update timer
     function manageCooldown() {
         const now = Date.now();
         if (rollsUsed >= MAX_ROLLS_PER_HOUR && cooldownEndTime <= now) {
-            // Only start a *new* cooldown if rolls are used up AND cooldown is not already active
+            // If rolls are used up AND cooldown is not already active/expired, start a new one
             cooldownEndTime = now + COOLDOWN_DURATION_MS;
             saveGameState(); // Save the new cooldown end time
+        } else if (cooldownEndTime <= now && rollsUsed < MAX_ROLLS_PER_HOUR) {
+            // If cooldown has passed AND rolls are NOT used up, ensure rolls are reset and cooldown is cleared
+            resetRolls(); // This covers the initial load case where rollsUsed might be 0 but cooldownEndTime is old
         }
+
 
         // Clear any existing interval to prevent multiple timers running
         clearInterval(timerInterval);
@@ -241,8 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function resetRolls() {
         rollsUsed = 0;
         cooldownEndTime = 0; // Clear cooldown
-        saveGameState(); // Save state after reset
-        // updateRollsDisplay() is called by the caller or by saveGameState()
+        saveGameState(); // Save state after reset (which also calls updateBalanceDisplay and renderInventory)
     }
 
     function formatTime(ms) {
@@ -333,7 +338,6 @@ document.addEventListener('DOMContentLoaded', () => {
             rollButton.disabled = false;
         } else {
              // If cooldown is active, button should remain disabled, and timer will handle re-enabling
-             // This is important because manageCooldown might have just started the cooldown
         }
     }
 
@@ -471,5 +475,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Initial Load Logic ---
     updateBalanceDisplay();
     renderInventory();
-    manageCooldown(); // This function now handles both starting and continuing the cooldown
+    // This is the key: call manageCooldown immediately to correctly set up the timer and rolls display
+    manageCooldown();
 });
