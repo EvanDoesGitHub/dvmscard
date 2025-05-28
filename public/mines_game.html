@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DVMS Mines</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="game-page-header">
+        <div class="header-left">
+            <a href="index.html" class="logo-link">
+                <div class="logo">DVMS</div>
+            </a>
+        </div>
+        <div class="header-right">
+            <div class="balance-display-header">Balance: $<span id="header-balance">0.00</span></div>
+        </div>
+    </header>
+
+    <div class="mines-game-container">
+        <div class="mines-controls-panel content-section">
+            <h2>Mines Game</h2>
+            <div class="control-group">
+                <label for="bet-amount">Bet Amount:</label>
+                <div class="input-with-buttons">
+                    <input type="number" id="bet-amount" value="1.00" min="0.01" step="0.01">
+                    <button id="half-bet" class="control-button">1/2</button>
+                    <button id="double-bet" class="control-button">2x</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="mines-count">Number of Mines:</label>
+                <select id="mines-count">
+                    <option value="3">3 Mines</option>
+                    <option value="5" selected>5 Mines</option>
+                    <option value="8">8 Mines</option>
+                    <option value="10">10 Mines</option>
+                    <option value="15">15 Mines</option>
+                    <option value="20">20 Mines</option>
+                </select>
+            </div>
+
+            <div class="game-status-display">
+                <p>Current Multiplier: <span id="current-multiplier">1.00x</span></p>
+                <p>Potential Payout: $<span id="potential-payout">0.00</span></p>
+            </div>
+
+            <div class="action-buttons">
+                <button id="bet-button" class="action-button">Bet</button>
+                <button id="cash-out-button" class="action-button" disabled>Cash Out $<span id="cash-out-amount">0.00</span></button>
+            </div>
+        </div>
+
+        <div class="mines-game-board-panel content-section">
+            <div id="mines-board" class="mines-board">
+                </div>
+            <div id="game-message" class="game-message">
+                Click "Bet" to start a new game!
+            </div>
+        </div>
+    </div>
+
+    <div id="success-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Notification</h3>
+            <p id="success-message"></p>
+            <div class="modal-buttons">
+                <button id="close-success-modal" class="action-button">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="mines_script.js"></script>
+</body>
+</html>
