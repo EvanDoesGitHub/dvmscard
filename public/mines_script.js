@@ -8,6 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const REVEALED_CLASS = 'revealed';
     const GAME_ACTIVE_CLASS = 'game-active';
 
+    // EMOJI CONSTANTS FOR MINES GAME
+    const GEM_EMOJI = '💎'; // Diamond emoji
+    const MINE_EMOJI = '💣'; // Bomb emoji
+
     // Payout multipliers based on number of gems revealed (simplified for now)
     // This can be expanded to be more sophisticated based on mines count and gems revealed
     const PAYOUT_MULTIPLIERS = {
@@ -33,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const minesBoard = document.getElementById('mines-board');
     const gameMessage = document.getElementById('game-message');
 
-    // Modals (reusing from card_roller_game.html structure)
+    // Modals (reusing existing structure)
     const successModalOverlay = document.getElementById('success-modal-overlay');
     const closeSuccessModalButton = document.getElementById('close-success-modal');
     const successMessage = document.getElementById('success-message');
@@ -135,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < cells.length; i++) {
             const cell = cells[i];
             if (!cell.classList.contains(REVEALED_CLASS)) {
-                revealCellContent(cell, i); // Reveal all unrevealed cells
+                revealCellContent(cell, i, true); // Reveal all unrevealed cells, forcing content display
             }
         }
 
@@ -148,31 +152,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function revealCellContent(cellElement, index) {
+    // Updated revealCellContent to use emojis
+    function revealCellContent(cellElement, index, forceReveal = false) {
+        if (!forceReveal && (cellElement.classList.contains(REVEALED_CLASS) || gameOver || !gameStarted)) {
+            return; // Prevent revealing if already revealed, game over, or not started
+        }
+
         cellElement.classList.add(REVEALED_CLASS);
         cellElement.removeEventListener('click', handleCellClick); // Prevent further clicks
 
         if (minesLocations.includes(index)) {
             cellElement.classList.add(MINE_CELL_CLASS);
-            cellElement.innerHTML = `<svg class="mine-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="8"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>`; // Simple bomb icon
+            cellElement.textContent = MINE_EMOJI; // Use emoji
             cellElement.style.setProperty('--mine-color', '#e74c3c'); // Red color for mine
-            endGame(true); // Game over, hit a mine
+            if (!forceReveal) { // Only end game if it was the player's direct click on a mine
+                endGame(true);
+            }
         } else {
             cellElement.classList.add(GEM_CELL_CLASS);
-            cellElement.innerHTML = `<svg class="gem-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>`; // Simple diamond icon
+            cellElement.textContent = GEM_EMOJI; // Use emoji
             cellElement.style.setProperty('--gem-color', 'var(--stake-green-primary)'); // Green color for gem
-            gemsFound++;
-            revealedCells.push(index);
-            updatePayoutDisplay();
+            
+            if (!forceReveal) { // Only count gems and update payout if not a forced reveal at end of game
+                gemsFound++;
+                revealedCells.push(index);
+                updatePayoutDisplay();
 
-            if (gemsFound === (GRID_SIZE - numberOfMines)) {
-                // All gems found, automatic win
-                balance = Math.min(MAX_BALANCE, balance + (currentBet * calculatePayoutMultiplier(gemsFound, numberOfMines)));
-                saveBalance();
-                endGame(false);
-                showSuccessModal(`Congratulations! You found all gems and won $${(currentBet * calculatePayoutMultiplier(gemsFound, numberOfMines)).toFixed(2)}!`);
-            } else {
-                cashOutButton.disabled = false; // Enable cash out after first gem
+                if (gemsFound === (GRID_SIZE - numberOfMines)) {
+                    // All gems found, automatic win
+                    balance = Math.min(MAX_BALANCE, balance + (currentBet * calculatePayoutMultiplier(gemsFound, numberOfMines)));
+                    saveBalance();
+                    endGame(false);
+                    showSuccessModal(`Congratulations! You found all gems and won $${(currentBet * calculatePayoutMultiplier(gemsFound, numberOfMines)).toFixed(2)}!`);
+                } else {
+                    cashOutButton.disabled = false; // Enable cash out after first gem
+                }
             }
         }
     }
@@ -182,11 +196,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const cell = event.currentTarget;
         const index = parseInt(cell.dataset.index, 10);
-
-        if (revealedCells.includes(index) || minesLocations.includes(index)) {
-            // Already revealed or is a mine (shouldn't be clickable if mine initially)
-            return;
-        }
 
         revealCellContent(cell, index);
     }
@@ -276,6 +285,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             betAmountInput.value = (currentVal / 2).toFixed(2);
         }
+        // Visually update potential payout when bet amount changes manually
+        if (!gameStarted) {
+            updatePayoutDisplay();
+        }
     });
 
     doubleBetButton.addEventListener('click', () => {
@@ -284,6 +297,10 @@ document.addEventListener('DOMContentLoaded', () => {
             betAmountInput.value = (1.00).toFixed(2);
         } else {
             betAmountInput.value = (currentVal * 2).toFixed(2);
+        }
+        // Visually update potential payout when bet amount changes manually
+        if (!gameStarted) {
+            updatePayoutDisplay();
         }
     });
 
@@ -295,6 +312,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             betAmountInput.value = val.toFixed(2);
         }
+        // Visually update potential payout when bet amount changes manually
+        if (!gameStarted) {
+            updatePayoutDisplay();
+        }
     });
 
     minesCountSelect.addEventListener('change', () => {
@@ -304,4 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updatePayoutDisplay();
         }
     });
+
+    // Initial update of potential payout when page loads to reflect default bet/mines
+    updatePayoutDisplay();
 });
