@@ -31,6 +31,14 @@
     --timer-bg-gradient: linear-gradient(135deg, #1c1f23 0%, #2a2d32 100%);
     /* New border gradient for the timer */
     --timer-border-gradient: linear-gradient(45deg, #00e576 0%, #00b84f 50%, #00e576 100%);
+
+    /* Mines Game Specific Colors */
+    --mines-cell-bg: #2b2e32; /* Dark background for unrevealed cells */
+    --mines-cell-border: rgba(0, 229, 118, 0.1); /* Subtle border for cells */
+    --mines-cell-hover-bg: #3a3e42; /* Lighter on hover */
+    --mines-gem-color: #00e576; /* Green for gems */
+    --mines-mine-color: #e74c3c; /* Red for mines */
+    --mines-game-board-bg: #1e2125; /* Slightly darker background for the board area */
 }
 
 body {
@@ -109,6 +117,26 @@ body {
 @keyframes timer-tick {
     0% { transform: scale(1); opacity: 1; }
     50% { transform: scale(1.02); opacity: 0.95; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Keyframes for cell reveal (flip/scale) */
+@keyframes cellReveal {
+    0% { transform: rotateY(-90deg) scale(0.8); opacity: 0; }
+    100% { transform: rotateY(0deg) scale(1); opacity: 1; }
+}
+
+/* Keyframes for gem glow */
+@keyframes gemGlow {
+    0% { filter: drop-shadow(0 0 5px var(--mines-gem-color)); }
+    50% { filter: drop-shadow(0 0 15px var(--mines-gem-color)) brightness(1.2); }
+    100% { filter: drop-shadow(0 0 5px var(--mines-gem-color)); }
+}
+
+/* Keyframes for mine explosion */
+@keyframes mineExplosion {
+    0% { transform: scale(0.5); opacity: 0; filter: blur(5px); }
+    50% { transform: scale(1.2); opacity: 1; filter: blur(0px); }
     100% { transform: scale(1); opacity: 1; }
 }
 
@@ -265,6 +293,29 @@ body {
     background-color: var(--stake-dark-blue-bg);
     border-bottom: 2px solid var(--stake-green-primary);
 }
+
+/* New style for Mines game card image */
+.mines-image {
+    background: linear-gradient(45deg, #1A1B1E, #222529); /* Dark gradient for mines bg */
+    border-bottom: 2px solid var(--mines-mine-color); /* Red border for mines */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mines-image .game-icon {
+    width: 80px;
+    height: 80px;
+    color: var(--mines-mine-color); /* Red color for the bomb icon */
+    filter: drop-shadow(0 0 8px rgba(231, 76, 60, 0.6)); /* Red glow */
+    transition: transform 0.3s ease-in-out, filter 0.3s ease-in-out;
+}
+
+.game-card:hover .mines-image .game-icon {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 15px rgba(231, 76, 60, 0.8)) brightness(1.1);
+}
+
 
 .game-card-info {
     padding: 10px 10px;
@@ -1257,5 +1308,328 @@ h1 {
     .inventory-card-image {
         width: 60px;
         height: 84px;
+    }
+}
+
+
+/* ==================================== */
+/* NEW STYLES FOR MINES GAME (mines_game.html) */
+/* ==================================== */
+
+.mines-game-container {
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr; /* Controls panel on left, board on right */
+    gap: 25px;
+    max-width: 1200px;
+    width: 100%;
+    margin: 20px auto;
+    padding: 20px;
+    align-items: flex-start; /* Align items to the top */
+}
+
+.mines-controls-panel {
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 30px;
+    min-width: 300px;
+}
+
+.mines-controls-panel h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 2em;
+    text-shadow: 0 0 8px var(--stake-border-glow-light);
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.control-group label {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--stake-text-light);
+    text-align: left;
+}
+
+.input-with-buttons {
+    display: flex;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--stake-lighter-dark-bg);
+    border: 1px solid rgba(0, 229, 118, 0.2);
+    box-shadow: inset 0 0 5px rgba(0, 229, 118, 0.1);
+}
+
+.input-with-buttons input[type="number"] {
+    flex-grow: 1;
+    background: none;
+    border: none;
+    padding: 12px 15px;
+    color: var(--stake-text-light);
+    font-size: 1.1em;
+    outline: none;
+    text-align: center;
+    -moz-appearance: textfield; /* Remove default spinner for Firefox */
+}
+.input-with-buttons input[type="number"]::-webkit-outer-spin-button,
+.input-with-buttons input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none; /* Remove default spinner for Chrome, Safari, Edge */
+    margin: 0;
+}
+
+.input-with-buttons .control-button {
+    background-color: var(--stake-medium-dark-bg);
+    color: var(--stake-green-primary);
+    border: none;
+    padding: 12px 15px;
+    font-size: 0.9em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    border-left: 1px solid rgba(0, 229, 118, 0.1);
+}
+
+.input-with-buttons .control-button:hover {
+    background-color: var(--stake-dark-blue-bg);
+    color: var(--stake-green-secondary);
+}
+
+#mines-count {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 8px;
+    background-color: var(--stake-lighter-dark-bg);
+    color: var(--stake-text-light);
+    border: 1px solid rgba(0, 229, 118, 0.2);
+    font-size: 1.1em;
+    -webkit-appearance: none; /* Remove default arrow */
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2300e576%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13.2-6.4H18.6c-5%200-9.3%201.8-13.2%206.4-3.9%204.5-6%2010-6%2016.3%200%206.2%202.1%2011.7%206%2016.3l127.8%20127.9c3.9%203.9%209.4%206%2015.7%206s11.8-2.1%2015.7-6L287%20102c3.9-4.6%206-10.1%206-16.3s-2.1-11.7-6-16.3z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 12px;
+    cursor: pointer;
+    outline: none;
+    box-shadow: inset 0 0 5px rgba(0, 229, 118, 0.1);
+}
+
+.game-status-display {
+    width: 100%;
+    background-color: var(--stake-medium-dark-bg);
+    padding: 15px 20px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 229, 118, 0.1);
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.game-status-display p {
+    margin: 5px 0;
+    font-size: 1.1em;
+    font-weight: 500;
+    color: var(--stake-text-medium);
+}
+
+.game-status-display span {
+    color: var(--stake-green-primary);
+    font-weight: 700;
+    font-size: 1.2em;
+}
+
+.mines-game-board-panel {
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-color: var(--mines-game-board-bg); /* Darker background for the board area */
+}
+
+.mines-board {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* 5x5 grid */
+    grid-template-rows: repeat(5, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 500px; /* Max width for the board */
+    aspect-ratio: 1 / 1; /* Keep it square */
+    padding: 15px;
+    background-color: var(--stake-dark-blue-bg);
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden; /* For cell animations */
+}
+
+.mines-cell {
+    width: 100%;
+    height: 100%;
+    background-color: var(--mines-cell-bg);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    border: 1px solid var(--mines-cell-border);
+    position: relative;
+    overflow: hidden; /* For inner content */
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+}
+
+.mines-cell:hover:not(.revealed) {
+    background-color: var(--mines-cell-hover-bg);
+    transform: translateY(-2px);
+    box-shadow: inset 0 0 8px rgba(0, 229, 118, 0.2), 0 2px 5px rgba(0,0,0,0.4);
+}
+
+/* Cell reveal animation */
+.mines-cell.revealed {
+    cursor: default;
+    animation: cellReveal 0.3s ease-out forwards;
+    transform: rotateY(0deg) scale(1); /* Ensure final state is correct */
+}
+
+.mines-cell.gem-cell {
+    background: linear-gradient(135deg, var(--mines-gem-color) 0%, var(--stake-green-secondary) 100%);
+    color: var(--stake-dark-blue-bg);
+    box-shadow: 0 0 15px var(--mines-gem-color), inset 0 0 10px rgba(255,255,255,0.3);
+    animation: gemGlow 1.5s infinite alternate ease-in-out; /* Gem glow animation */
+    border: 1px solid var(--mines-gem-color);
+}
+
+.mines-cell.mine-cell {
+    background: linear-gradient(135deg, var(--mines-mine-color) 0%, #c0392b 100%);
+    color: white;
+    box-shadow: 0 0 15px var(--mines-mine-color), inset 0 0 10px rgba(255,255,255,0.3);
+    animation: mineExplosion 0.5s ease-out forwards; /* Mine explosion animation */
+    border: 1px solid var(--mines-mine-color);
+}
+
+/* SVG Icon Styling */
+.mines-cell svg {
+    width: 60%;
+    height: 60%;
+    stroke-width: 2;
+    filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); /* Subtle shadow for icons */
+}
+
+.mines-cell.gem-cell svg {
+    color: var(--stake-dark-blue-bg); /* Dark icon on bright gem */
+}
+
+.mines-cell.mine-cell svg {
+    color: white; /* White icon on red mine */
+}
+
+
+.game-message {
+    margin-top: 20px;
+    font-size: 1.2em;
+    font-weight: 600;
+    color: var(--stake-text-light);
+    min-height: 30px; /* Reserve space */
+    text-align: center;
+}
+
+/* Responsive adjustments for Mines Game */
+@media (max-width: 1024px) {
+    .mines-game-container {
+        grid-template-columns: 1fr; /* Stack panels vertically */
+        padding: 15px;
+    }
+
+    .mines-controls-panel {
+        min-width: unset;
+        width: 100%;
+        max-width: 500px; /* Constrain width on smaller screens */
+        margin: 0 auto;
+    }
+
+    .mines-game-board-panel {
+        width: 100%;
+        max-width: 500px; /* Constrain board panel width */
+        margin: 0 auto;
+    }
+
+    .mines-board {
+        width: 100%;
+        max-width: 400px; /* Adjust max width for board itself */
+        height: auto; /* Allow height to adjust based on width */
+        margin-bottom: 20px;
+    }
+}
+
+@media (max-width: 600px) {
+    .mines-game-container {
+        padding: 10px;
+        gap: 15px;
+    }
+
+    .mines-controls-panel, .mines-game-board-panel {
+        padding: 20px;
+        border-radius: 0; /* Remove border-radius on very small screens for full width look */
+        box-shadow: none;
+        animation: none;
+        border: none;
+        background: var(--stake-dark-blue-bg); /* Match body background */
+    }
+
+    .mines-controls-panel h2 {
+        font-size: 1.8em;
+    }
+
+    .input-with-buttons input, #mines-count {
+        padding: 10px 12px;
+        font-size: 1em;
+    }
+
+    .input-with-buttons .control-button {
+        padding: 10px 12px;
+        font-size: 0.8em;
+    }
+
+    .game-status-display {
+        padding: 12px;
+    }
+
+    .game-status-display p {
+        font-size: 1em;
+    }
+
+    .game-status-display span {
+        font-size: 1.1em;
+    }
+
+    .mines-board {
+        gap: 8px;
+        padding: 10px;
+        max-width: 300px; /* Even smaller board */
+    }
+
+    .mines-cell {
+        border-radius: 6px;
+        font-size: 1.5em;
+    }
+
+    .mines-cell svg {
+        width: 50%;
+        height: 50%;
+    }
+
+    .game-message {
+        font-size: 1em;
     }
 }
