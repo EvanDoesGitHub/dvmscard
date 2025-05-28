@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DVMS Card Roller</title>
+    <title>DVMS Games</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
-    <header class="game-page-header">
+    <header class="main-header">
         <div class="header-left">
             <a href="index.html" class="logo-link">
                 <div class="logo">DVMS</div>
@@ -19,103 +19,32 @@
         </div>
     </header>
 
-    <div class="main-app-container">
-        <div class="content-section inventory-container">
-            <h2>Your Inventory</h2>
-            <div id="inventory-list" class="inventory-list">
-                <p class="empty-inventory-message">Your inventory is empty. Roll some cards to get started!</p>
-            </div>
-            <div class="action-buttons">
-                <button id="sell-all-button" class="action-button sell-all-button">Sell All Cards</button>
-            </div>
-        </div>
-
-        <div class="content-section roller-container">
-            <h1>Card Roller</h1>
-            <div class="card-display-area">
-                <div id="card-display">
-                    <img src="https://placehold.co/220x308/1A1B1E/00E576?text=Click+Roll+To+Start" alt="Card Display" class="card-image">
-                    <div class="card-info">
-                        <h3>Roll to reveal!</h3>
-                        <p>Rarity: <span class="card-rarity">???</span></p>
-                        <p>Value: $<span class="card-value">0.00</span></p>
+    <div class="main-layout">
+        <div class="content-area full-width-content">
+            <h2>Our Games</h2>
+            <div class="game-grid">
+                <a href="card_roller_game.html" class="game-card">
+                    <div class="game-card-image card-roller-image">
+                        <img src="https://placehold.co/220x308/1A1B1E/00E576?text=DVMS+Card+Roller" alt="Card Roller Game">
                     </div>
+                    <div class="game-card-info">
+                        <h3 class="game-title">Card Roller</h3>
+                        <p class="game-category">Collectibles</p>
+                    </div>
+                </a>
                 </div>
-                <div id="rolling-card-animation" style="display: none;">
-                    <img src="https://placehold.co/220x308/1A1B1E/00E576?text=Rolling..." alt="Rolling Card" class="rolling-card-image">
-                </div>
-            </div>
-            <div class="card-value-details">
-                <p id="roll-outcome-message"></p>
-            </div>
-
-            <div id="roll-limit-container">
-                <div class="rolls-info">
-                    Rolls Remaining: <span id="rolls-remaining">10</span> / <span id="max-rolls">10</span>
-                </div>
-                <div class="cooldown-timer">
-                    Next Roll In: <span id="cooldown-display">00:00:00</span>
-                </div>
-                <div class="timer-border"></div>
-            </div>
-
-            <div class="action-buttons">
-                <button id="roll-button" class="action-button">Roll Card</button>
-            </div>
-        </div>
-
-        <div class="content-section balance-container">
-            <h2>Current Balance</h2>
-            <p class="balance-display">$<span id="current-balance">0.00</span></p>
         </div>
     </div>
 
-    <div id="individual-sell-modal-overlay" class="modal-overlay">
-        <div class="modal-content">
-            <span class="close-button" id="close-individual-sell-modal">&times;</span>
-            <h3>Sell Card(s)</h3>
-            <img src="" alt="Card to Sell" class="modal-card-image" id="individual-sell-modal-card-image">
-            <p>Selling: <strong><span id="individual-modal-card-name"></span></strong></p>
-            <p>Rarity: <span id="individual-modal-card-rarity"></span></p>
-            <p>Value per card: $<span id="individual-modal-card-value"></span></p>
-            <p>Available: <span id="individual-modal-card-available-quantity"></span></p>
-            <div class="modal-input-group">
-                <label for="sell-quantity-input">Quantity to Sell:</label>
-                <input type="number" id="sell-quantity-input" min="1" value="1">
-            </div>
-            <p>Total Sell Value: $<strong id="individual-modal-total-value">0.00</strong></p>
-            <div class="modal-buttons">
-                <button id="confirm-individual-sell-button" class="action-button sell-button">Confirm Sell</button>
-                <button id="cancel-individual-sell-button" class="action-button cancel-button">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="sell-all-modal-overlay" class="modal-overlay">
-        <div class="modal-content">
-            <span class="close-button" id="close-sell-all-modal">&times;</span>
-            <h3>Confirm Sell All Cards</h3>
-            <p>Are you sure you want to sell all cards in your inventory?</p>
-            <div class="sell-all-cards-list" id="all-cards-to-sell-list">
-                </div>
-            <p>Total estimated earnings: <strong>$<span id="total-all-sell-value">0.00</span></strong></p>
-            <div class="modal-buttons">
-                <button id="confirm-sell-all-button" class="action-button sell-button">Confirm Sell All</button>
-                <button id="cancel-sell-all-button" class="action-button cancel-button">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="success-modal-overlay" class="modal-overlay">
-        <div class="modal-content">
-            <h3>Success!</h3>
-            <p id="success-message"></p>
-            <div class="modal-buttons">
-                <button id="close-success-modal" class="action-button">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
+    <script>
+        // Basic script to update balance display on the index page if available in local storage
+        document.addEventListener('DOMContentLoaded', () => {
+            const balance = parseFloat(localStorage.getItem('balance')) || 0;
+            const headerBalanceElement = document.getElementById('header-balance');
+            if (headerBalanceElement) {
+                headerBalanceElement.textContent = balance.toFixed(2);
+            }
+        });
+    </script>
 </body>
 </html>
