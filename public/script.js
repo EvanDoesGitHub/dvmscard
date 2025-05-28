@@ -39,11 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const rollingCardAnimation = document.getElementById('rolling-card-animation');
     const rollOutcomeMessage = document.getElementById('roll-outcome-message');
     const inventoryList = document.getElementById('inventory-list');
-    const sellAllButton = document.getElementById('sell-all-button'); // Corrected ID usage
-    const emptyInventoryMessage = document.querySelector('.empty-inventory-message');
+    const sellAllButton = document.getElementById('sell-all-button');
 
     // Modals
-    // Individual Sell Modal with Quantity
     const individualSellModalOverlay = document.getElementById('individual-sell-modal-overlay');
     const closeIndividualSellModalButton = document.getElementById('close-individual-sell-modal');
     const individualModalCardImage = document.getElementById('individual-sell-modal-card-image');
@@ -56,15 +54,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmIndividualSellButton = document.getElementById('confirm-individual-sell-button');
     const cancelIndividualSellButton = document.getElementById('cancel-individual-sell-button');
 
-    // Universal Sell All Modal
     const sellAllModalOverlay = document.getElementById('sell-all-modal-overlay');
     const closeSellAllModalButton = document.getElementById('close-sell-all-modal');
-    const allCardsToSellList = document.getElementById('all-cards-to-sell-list'); // Corrected ID usage
-    const totalAllSellValueSpan = document.getElementById('total-all-sell-value'); // Corrected ID usage
+    const allCardsToSellList = document.getElementById('all-cards-to-sell-list');
+    const totalAllSellValueSpan = document.getElementById('total-all-sell-value');
     const confirmSellAllButton = document.getElementById('confirm-sell-all-button');
     const cancelSellAllButton = document.getElementById('cancel-sell-all-button');
 
-    // Success Modal
     const successModalOverlay = document.getElementById('success-modal-overlay');
     const closeSuccessModalButton = document.getElementById('close-success-modal');
     const successMessage = document.getElementById('success-message');
@@ -75,14 +71,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const cooldownDisplaySpan = document.getElementById('cooldown-display');
 
     // --- Game State Variables (Persisted in localStorage) ---
-    // Ensure values are parsed correctly. Use || for default if getItem returns null/undefined.
     let balance = parseFloat(localStorage.getItem('balance')) || INITIAL_BALANCE;
     let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
-    let rollsUsed = parseInt(localStorage.getItem('rollsUsed') || '0', 10); // Base 10 for parseInt
-    let cooldownEndTime = parseInt(localStorage.getItem('cooldownEndTime') || '0', 10); // Base 10 for parseInt
+    let rollsUsed = parseInt(localStorage.getItem('rollsUsed') || '0', 10);
+    let cooldownEndTime = parseInt(localStorage.getItem('cooldownEndTime') || '0', 10);
 
     let timerInterval; // To hold the setInterval for the cooldown timer
-    let currentSellingCard = null; // Store the card being sold for individual sell modal
+    let currentSellingCard = null;
 
     // --- Helper Functions ---
 
@@ -118,14 +113,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addCardToInventory(card) {
-        // Check if card already exists in inventory (by name and rarity)
         const existingCardIndex = inventory.findIndex(item => item.name === card.name && item.rarity === card.rarity);
 
         if (existingCardIndex > -1) {
-            // If it exists, increment quantity
             inventory[existingCardIndex].quantity = (inventory[existingCardIndex].quantity || 1) + 1;
         } else {
-            // If not, add new card with quantity 1
             inventory.push({ ...card, quantity: 1 });
         }
         saveGameState();
@@ -137,36 +129,34 @@ document.addEventListener('DOMContentLoaded', () => {
             if (inventory[index].quantity >= quantityToRemove) {
                 inventory[index].quantity -= quantityToRemove;
                 if (inventory[index].quantity <= 0) {
-                    inventory.splice(index, 1); // Remove the card completely if quantity is 0 or less
+                    inventory.splice(index, 1);
                 }
                 saveGameState();
                 return true;
             } else {
-                // Not enough quantity to remove
                 return false;
             }
         }
-        return false; // Card not found
+        return false;
     }
 
     function renderInventory() {
-        inventoryList.innerHTML = ''; // Clear current inventory display (except for the empty message)
+        inventoryList.innerHTML = '';
 
-        const sortedInventory = [...inventory].sort((a, b) => { // Create a copy to sort
-            // Sort by rarity: Legendary, Epic, Rare, Uncommon, Common
+        const sortedInventory = [...inventory].sort((a, b) => {
             const rarityOrder = { "legendary": 5, "epic": 4, "rare": 3, "uncommon": 2, "common": 1 };
             return rarityOrder[b.rarity] - rarityOrder[a.rarity];
         });
 
         if (sortedInventory.length === 0) {
-            emptyInventoryMessage.style.display = 'flex'; // Show the empty message
-            inventoryList.classList.add('empty-state'); // Add class for centering
-            sellAllButton.disabled = true; // Disable sell all if no cards
+            emptyInventoryMessage.style.display = 'flex';
+            inventoryList.classList.add('empty-state');
+            sellAllButton.disabled = true;
             return;
         } else {
-            emptyInventoryMessage.style.display = 'none'; // Hide the empty message
-            inventoryList.classList.remove('empty-state'); // Remove class for centering
-            sellAllButton.disabled = false; // Enable sell all if cards exist
+            emptyInventoryMessage.style.display = 'none';
+            inventoryList.classList.remove('empty-state');
+            sellAllButton.disabled = false;
         }
 
         sortedInventory.forEach(card => {
@@ -181,10 +171,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${card.quantity > 1 ? `<span class="card-count-overlay">${card.quantity}</span>` : ''}
                 <button class="inventory-card-sell-button" data-name="${card.name}" data-rarity="${card.rarity}">Sell ($${card.value.toFixed(2)})</button>
             `;
-            // Attach event listener to the specific sell button
             const sellIndividualButton = cardElement.querySelector('.inventory-card-sell-button');
             sellIndividualButton.addEventListener('click', (event) => {
-                event.stopPropagation(); // Prevent any parent click events (like card click) from firing
+                event.stopPropagation();
                 openIndividualSellModal(card);
             });
             inventoryList.appendChild(cardElement);
@@ -202,50 +191,58 @@ document.addEventListener('DOMContentLoaded', () => {
             rollButton.disabled = true;
             const timeLeft = cooldownEndTime - now;
             cooldownDisplaySpan.textContent = formatTime(timeLeft);
-            cooldownDisplaySpan.parentElement.style.display = 'flex'; // Show timer
+            cooldownDisplaySpan.parentElement.style.display = 'flex';
             rollOutcomeMessage.textContent = 'Roll limit reached. Next roll in:';
-            rollOutcomeMessage.style.color = '#e74c3c'; // Red for warning
+            rollOutcomeMessage.style.color = '#e74c3c';
         } else {
-            // Cooldown is over or never started, reset rolls if they were used up
+            // Cooldown has passed or never active.
+            // If rolls were previously maxed, reset them now.
             if (rollsUsed >= MAX_ROLLS_PER_HOUR) {
-                resetRolls(); // This also calls saveGameState() and updateRollsDisplay()
+                resetRolls(); // This will also call saveGameState() and updateRollsDisplay()
             }
             rollButton.disabled = false;
-            cooldownDisplaySpan.parentElement.style.display = 'none'; // Hide timer
-            cooldownDisplaySpan.textContent = '00:00:00'; // Reset display
-            clearInterval(timerInterval); // Stop any running timer
-            rollOutcomeMessage.textContent = ''; // Clear previous message
+            cooldownDisplaySpan.parentElement.style.display = 'none';
+            cooldownDisplaySpan.textContent = '00:00:00';
+            clearInterval(timerInterval);
+            rollOutcomeMessage.textContent = '';
             rollOutcomeMessage.style.color = 'var(--stake-text-medium)';
         }
     }
 
-    function startCooldown() {
-        cooldownEndTime = Date.now() + COOLDOWN_DURATION_MS;
-        rollsUsed = MAX_ROLLS_PER_HOUR; // Ensure rollsUsed is at max when cooldown starts
-        saveGameState(); // Save the new cooldown end time and rollsUsed
-
-        updateRollsDisplay(); // Update display immediately
+    // New function to manage cooldown: start if needed, or just update timer
+    function manageCooldown() {
+        const now = Date.now();
+        if (rollsUsed >= MAX_ROLLS_PER_HOUR && cooldownEndTime <= now) {
+            // Only start a *new* cooldown if rolls are used up AND cooldown is not already active
+            cooldownEndTime = now + COOLDOWN_DURATION_MS;
+            saveGameState(); // Save the new cooldown end time
+        }
 
         // Clear any existing interval to prevent multiple timers running
         clearInterval(timerInterval);
 
-        timerInterval = setInterval(() => {
-            const now = Date.now();
-            if (now >= cooldownEndTime) {
-                clearInterval(timerInterval);
-                resetRolls(); // Reset rolls when cooldown is over
-                updateRollsDisplay(); // Update display after reset
-            } else {
-                updateRollsDisplay(); // Keep updating the display
-            }
-        }, 1000); // Update every second
+        // Always start or continue the countdown if cooldownEndTime is in the future
+        if (cooldownEndTime > now) {
+            timerInterval = setInterval(() => {
+                const currentTime = Date.now();
+                if (currentTime >= cooldownEndTime) {
+                    clearInterval(timerInterval);
+                    resetRolls(); // Reset rolls when cooldown is truly over
+                    updateRollsDisplay(); // Update display after reset
+                } else {
+                    updateRollsDisplay(); // Keep updating the display
+                }
+            }, 1000); // Update every second
+        }
+        updateRollsDisplay(); // Initial display update
     }
+
 
     function resetRolls() {
         rollsUsed = 0;
         cooldownEndTime = 0; // Clear cooldown
         saveGameState(); // Save state after reset
-        updateRollsDisplay();
+        // updateRollsDisplay() is called by the caller or by saveGameState()
     }
 
     function formatTime(ms) {
@@ -265,11 +262,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function rollCard() {
         // Check roll limit BEFORE attempting to roll
         if (rollsUsed >= MAX_ROLLS_PER_HOUR) {
-            // If cooldown isn't active, but rollsUsed is max, it means cooldown should start
-            if (cooldownEndTime <= Date.now()) {
-                startCooldown(); // This will show the timer
-            }
-            showSuccessModal('You have reached your roll limit. Please wait for the cooldown to end.');
+            manageCooldown(); // Ensure cooldown is active if rolls are exhausted
+            showSuccessModal('You have reached your roll limit. Please wait for the cooldown to end.', false);
             return;
         }
 
@@ -282,83 +276,81 @@ document.addEventListener('DOMContentLoaded', () => {
         // Deduct roll cost if any
         if (MIN_BALANCE_FOR_ROLL > 0) {
             balance -= MIN_BALANCE_FOR_ROLL;
-            saveGameState(); // Save balance change
+            // Balance is saved by saveGameState at the end of function
         }
 
         // Disable roll button and update display
         rollButton.disabled = true;
         rollOutcomeMessage.textContent = 'Rolling...';
         rollOutcomeMessage.style.color = 'var(--stake-text-medium)';
-        rollingCardAnimation.style.display = 'block'; // Show rolling animation
-        cardDisplay.style.display = 'none'; // Hide static card display
+        rollingCardAnimation.style.display = 'block';
+        cardDisplay.style.display = 'none';
 
         rollsUsed++; // Increment roll count
         saveGameState(); // Save state immediately after roll (this updates rollsRemainingSpan)
 
-        // If this roll hits the limit, start the cooldown
-        if (rollsUsed >= MAX_ROLLS_PER_HOUR && cooldownEndTime <= Date.now()) { // Ensure cooldown isn't already active
-            startCooldown();
-        } else {
-            updateRollsDisplay(); // Just update remaining rolls display
+        // If this roll hits the limit, ensure cooldown management is triggered
+        if (rollsUsed >= MAX_ROLLS_PER_HOUR) {
+            manageCooldown(); // This will start cooldown if it's not already running
         }
 
+
         // Simulate rolling time
-        await new Promise(resolve => setTimeout(resolve, 2000)); // 2 seconds animation
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         const newCard = getRandomCard();
         addCardToInventory(newCard);
 
-        rollingCardAnimation.style.display = 'none'; // Hide rolling animation
-        cardDisplay.style.display = 'block'; // Show static card display
+        rollingCardAnimation.style.display = 'none';
+        cardDisplay.style.display = 'block';
 
-        // Update card display with new card info
         cardImage.src = newCard.image;
         cardName.textContent = newCard.name;
         cardRarity.textContent = newCard.rarity;
-        cardRarity.className = `card-rarity ${newCard.rarity}`; // Update class for rarity color
+        cardRarity.className = `card-rarity ${newCard.rarity}`;
         cardValue.textContent = newCard.value.toFixed(2);
 
-        // Remove old ribbon if any
         const oldRibbon = cardDisplay.querySelector('.rarity-ribbon');
         if (oldRibbon) {
             oldRibbon.remove();
         }
 
-        // Add new rarity ribbon
         const rarityRibbon = document.createElement('div');
         rarityRibbon.classList.add('rarity-ribbon', newCard.rarity);
         rarityRibbon.textContent = newCard.rarity;
         cardDisplay.appendChild(rarityRibbon);
 
-        // Add reveal animation
         cardDisplay.classList.add('reveal-animation');
         cardDisplay.addEventListener('animationend', () => {
             cardDisplay.classList.remove('reveal-animation');
         }, { once: true });
 
         rollOutcomeMessage.textContent = `You got: ${newCard.name} (${newCard.rarity}) for $${newCard.value.toFixed(2)}!`;
-        rollOutcomeMessage.style.color = newCard.rarity === 'legendary' ? 'var(--stake-green-primary)' : 'var(--stake-text-light)'; // Highlight legendary
+        rollOutcomeMessage.style.color = newCard.rarity === 'legendary' ? 'var(--stake-green-primary)' : 'var(--stake-text-light)';
 
-        // Re-enable roll button only if cooldown isn't active
+        // Re-enable roll button only if cooldown is not active
         if (cooldownEndTime <= Date.now()) {
             rollButton.disabled = false;
+        } else {
+             // If cooldown is active, button should remain disabled, and timer will handle re-enabling
+             // This is important because manageCooldown might have just started the cooldown
         }
     }
 
     // --- Individual Sell Modal Functions ---
 
     function openIndividualSellModal(card) {
-        currentSellingCard = card; // Store the card instance
+        currentSellingCard = card;
         individualModalCardImage.src = card.image;
         individualModalCardName.textContent = card.name;
         individualModalCardRarity.textContent = card.rarity;
-        individualModalCardRarity.className = `card-rarity ${card.rarity}`; // Apply rarity class for color
+        individualModalCardRarity.className = `card-rarity ${card.rarity}`;
         individualModalCardValue.textContent = card.value.toFixed(2);
         individualModalCardAvailableQuantity.textContent = card.quantity;
 
-        sellQuantityInput.value = 1; // Default to selling 1
-        sellQuantityInput.max = card.quantity; // Set max quantity
-        updateIndividualSellTotalValue(); // Update total value initially
+        sellQuantityInput.value = 1;
+        sellQuantityInput.max = card.quantity;
+        updateIndividualSellTotalValue();
 
         individualSellModalOverlay.classList.add('active');
     }
@@ -393,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalValueSold = currentSellingCard.value * quantityToSell;
             balance = Math.min(MAX_BALANCE, balance + totalValueSold);
             showSuccessModal(`Successfully sold ${quantityToSell} x ${currentSellingCard.name} for $${totalValueSold.toFixed(2)}!`);
-            saveGameState(); // Re-render inventory after selling
+            saveGameState();
         } else {
             showSuccessModal('Error: Could not sell card(s). Not enough quantity or card not found.', false);
         }
@@ -408,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        allCardsToSellList.innerHTML = ''; // Clear previous list
+        allCardsToSellList.innerHTML = '';
         let totalValue = 0;
 
         inventory.forEach(card => {
@@ -432,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
             inventory.forEach(card => {
                 totalSoldValue += card.value * (card.quantity || 1);
             });
-            inventory = []; // Clear all cards from inventory
+            inventory = [];
             balance = Math.min(MAX_BALANCE, balance + totalSoldValue);
             saveGameState();
             showSuccessModal(`Sold all cards for a total of $${totalSoldValue.toFixed(2)}!`);
@@ -449,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isSuccess) {
             successMessage.style.color = 'var(--stake-green-primary)';
         } else {
-            successMessage.style.color = '#e74c3c'; // Red for errors/warnings
+            successMessage.style.color = '#e74c3c';
         }
         successModalOverlay.classList.add('active');
     }
@@ -460,13 +452,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Listeners ---
     rollButton.addEventListener('click', rollCard);
-    sellAllButton.addEventListener('click', openSellAllCardsModal); // Universal sell all
+    sellAllButton.addEventListener('click', openSellAllCardsModal);
 
     // Individual Sell Modal Listeners
     closeIndividualSellModalButton.addEventListener('click', closeIndividualSellModal);
     cancelIndividualSellButton.addEventListener('click', closeIndividualSellModal);
     confirmIndividualSellButton.addEventListener('click', confirmIndividualSell);
-    sellQuantityInput.addEventListener('input', updateIndividualSellTotalValue); // Update total value on quantity change
+    sellQuantityInput.addEventListener('input', updateIndividualSellTotalValue);
 
     // Universal Sell All Modal Listeners
     closeSellAllModalButton.addEventListener('click', closeSellAllCardsModal);
@@ -476,17 +468,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // General Success Modal Listener
     closeSuccessModalButton.addEventListener('click', closeSuccessModal);
 
-    // --- Initial Load ---
+    // --- Initial Load Logic ---
     updateBalanceDisplay();
     renderInventory();
-    updateRollsDisplay(); // Initial update for rolls and timer display
-
-    // If a cooldown was active from a previous session, restart the timer countdown
-    // This condition specifically checks if cooldownEndTime is in the future relative to now.
-    if (cooldownEndTime > Date.now()) {
-        startCooldown();
-    } else {
-        // If cooldown has passed, or was never active, ensure rolls are reset and UI is correct
-        resetRolls(); // This ensures rollsUsed is 0 if cooldownEndTime is 0 or in the past
-    }
+    manageCooldown(); // This function now handles both starting and continuing the cooldown
 });
