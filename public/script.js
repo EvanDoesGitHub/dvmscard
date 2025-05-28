@@ -1,464 +1,557 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // --- Constants and Configuration ---
-    const MAX_BALANCE = 1000000; // Max balance for the game
-    const MIN_BALANCE_FOR_ROLL = 0; // Cost to roll a card - SET TO 0 FOR FREE ROLLS!
-    const INITIAL_BALANCE = 100; // Starting balance for new players
-    const MAX_ROLLS_PER_HOUR = 10; // Max rolls allowed within one hour
-    const COOLDOWN_DURATION_MS = 60 * 60 * 1000; // 1 hour in milliseconds
+// public/script.js
 
-    // Card data
-    const cards = [
-        { name: "Common Card A", rarity: "common", value: 10, image: "https://placehold.co/220x308/1A1B1E/00E576?text=Common+A" },
-        { name: "Common Card B", rarity: "common", value: 12, image: "https://placehold.co/220x308/1A1B1E/00E576?text=Common+B" },
-        { name: "Common Card C", rarity: "common", value: 15, image: "https://placehold.co/220x308/1A1B1E/00E576?text=Common+C" },
-        { name: "Uncommon Card X", rarity: "uncommon", value: 25, image: "https://placehold.co/220x308/1A1B1E/00E576?text=Uncommon+X" },
-        { name: "Uncommon Card Y", rarity: "uncommon", value: 30, image: "https://placehold.co/220x308/1A1B1E/00E576?text=Uncommon+Y" },
-        { name: "Rare Card P", rarity: "rare", value: 75, image: "https://placehold.co/220x308/1A1B1E/00E576?text=Rare+P" },
-        { name: "Rare Card Q", rarity: "rare", value: 100, image: "https://placehold.co/220x308/1A1B1E/00E576?text=Rare+Q" },
-        { name: "Epic Card M", rarity: "epic", value: 250, image: "https://placehold.co/220x308/1A1B1E/00E576?text=Epic+M" },
-        { name: "Legendary Card Z", rarity: "legendary", value: 1000, image: "https://placehold.co/220x308/1A1B1E/00E576?text=Legendary+Z" }
-    ];
+// *** IMPORTANT: This is your Railway application's base URL ***
+const BASE_URL = 'https://dvms.up.railway.app';
+// ************************************************************
 
-    // Rarity distribution percentages (sum should be 100)
-    const rarityDistribution = {
-        common: 60,
-        uncommon: 25,
-        rare: 10,
-        epic: 4,
-        legendary: 1
-    };
+// DOM Elements - Ensure these IDs match your HTML exactly!
+const balanceDisplay = document.getElementById('balance-display'); // Header balance
+const balanceDisplayBottom = document.getElementById('balance-display-bottom'); // Bottom balance
 
-    // --- DOM Elements ---
-    const balanceDisplayElements = document.querySelectorAll('#header-balance, #current-balance');
-    const rollButton = document.getElementById('roll-button');
-    const cardDisplay = document.getElementById('card-display');
-    const cardImage = cardDisplay.querySelector('.card-image');
-    const cardName = document.getElementById('card-display').querySelector('h3');
-    const cardRarity = document.getElementById('card-display').querySelector('.card-rarity');
-    const cardValue = document.getElementById('card-display').querySelector('.card-value');
-    const rollingCardAnimation = document.getElementById('rolling-card-animation');
-    const rollOutcomeMessage = document.getElementById('roll-outcome-message');
-    const inventoryList = document.getElementById('inventory-list');
-    const sellAllButton = document.getElementById('sell-all-button'); // Corrected ID usage
-    const emptyInventoryMessage = document.querySelector('.empty-inventory-message');
+const rollButton = document.getElementById('roll-button'); // Now handles initial roll
+const rollAgainButton = document.getElementById('roll-again-button'); // New "Roll Again" button
+const sellCardButton = document.getElementById('sell-card-button');
+const sellAllButton = document.getElementById('sell-all-button');
 
-    // Modals
-    // Individual Sell Modal with Quantity
-    const individualSellModalOverlay = document.getElementById('individual-sell-modal-overlay');
-    const closeIndividualSellModalButton = document.getElementById('close-individual-sell-modal');
-    const individualModalCardImage = document.getElementById('individual-sell-modal-card-image');
-    const individualModalCardName = document.getElementById('individual-modal-card-name');
-    const individualModalCardRarity = document.getElementById('individual-modal-card-rarity');
-    const individualModalCardValue = document.getElementById('individual-modal-card-value');
-    const individualModalCardAvailableQuantity = document.getElementById('individual-modal-card-available-quantity');
-    const sellQuantityInput = document.getElementById('sell-quantity-input');
-    const individualModalTotalValue = document.getElementById('individual-modal-total-value');
-    const confirmIndividualSellButton = document.getElementById('confirm-individual-sell-button');
-    const cancelIndividualSellButton = document.getElementById('cancel-individual-sell-button');
+const inventoryContainer = document.getElementById('inventory-container');
 
-    // Universal Sell All Modal
-    const sellAllModalOverlay = document.getElementById('sell-all-modal-overlay');
-    const closeSellAllModalButton = document.getElementById('close-sell-all-modal');
-    const allCardsToSellList = document.getElementById('all-cards-to-sell-list'); // Corrected ID usage
-    const totalAllSellValueSpan = document.getElementById('total-all-sell-value'); // Corrected ID usage
-    const confirmSellAllButton = document.getElementById('confirm-sell-all-button');
-    const cancelSellAllButton = document.getElementById('cancel-sell-all-button');
+const initialRollMessage = document.getElementById('initial-roll-message'); // The initial "Click Roll" div
+const rollingCardAnimation = document.getElementById('rolling-card-animation'); // Container for the rolling animation
+const cardDisplay = document.getElementById('card-display'); // Container for the single displayed card details
 
-    // Success Modal
-    const successModalOverlay = document.getElementById('success-modal-overlay');
-    const closeSuccessModalButton = document.getElementById('close-success-modal');
-    const successMessage = document.getElementById('success-message');
+const cardImage = document.getElementById('card-image'); // Image within cardDisplay
+const cardTitle = document.getElementById('card-title');
+const cardRarity = document.getElementById('card-rarity');
+const cardValue = document.getElementById('card-value');
+const rarityRibbon = document.getElementById('rarity-ribbon');
+const cardValueDisplay = document.getElementById('card-value-display');
+const cardValueDescription = document.getElementById('card-value-description');
 
-    // Roll Limit UI Elements
-    const rollsRemainingSpan = document.getElementById('rolls-remaining');
-    const maxRollsSpan = document.getElementById('max-rolls');
-    const cooldownDisplaySpan = document.getElementById('cooldown-display');
+// Single Sell Confirmation Modal
+const confirmationModal = document.getElementById('confirmation-modal');
+const modalConfirmCardTitle = document.getElementById('modal-confirm-card-title');
+const modalConfirmCardValue = document.getElementById('modal-confirm-card-value');
+const confirmSellButton = document.getElementById('confirm-sell-button');
+const cancelSellButton = document.getElementById('cancel-sell-button');
+const closeConfirmModal = document.getElementById('close-confirm-modal');
 
-    // --- Game State Variables (Persisted in localStorage) ---
-    let balance = parseFloat(localStorage.getItem('balance')) || INITIAL_BALANCE;
-    let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
-    let rollsUsed = parseInt(localStorage.getItem('rollsUsed') || '0'); // Ensure parsing as int, default to 0
-    let cooldownEndTime = parseInt(localStorage.getItem('cooldownEndTime') || '0'); // Ensure parsing as int, default to 0
+// Sell All Modal
+const sellAllModalOverlay = document.getElementById('sell-all-modal-overlay');
+const sellAllCardsList = document.getElementById('sell-all-cards-list');
+const sellAllPotentialEarnings = document.getElementById('sell-all-potential-earnings');
+const confirmSellAllButton = document.getElementById('confirm-sell-all-button');
+const cancelSellAllButton = document.getElementById('cancel-sell-all-button');
+const closeSellAllModal = document.getElementById('close-sell-all-modal');
 
-    let timerInterval; // To hold the setInterval for the cooldown timer
-    let currentSellingCard = null; // Store the card being sold for individual sell modal
+// Success Message Modal
+const successModalOverlay = document.getElementById('success-modal-overlay');
+const successModalTitle = document.getElementById('success-modal-title');
+const successModalMessage = document.getElementById('success-modal-message');
+const successModalOkButton = document.getElementById('success-modal-ok-button');
+const closeSuccessModal = document.getElementById('close-success-modal');
 
-    // --- Helper Functions ---
 
-    function saveGameState() {
-        localStorage.setItem('balance', balance.toFixed(2));
-        localStorage.setItem('inventory', JSON.stringify(inventory));
-        localStorage.setItem('rollsUsed', rollsUsed.toString()); // Store as string
-        localStorage.setItem('cooldownEndTime', cooldownEndTime.toString()); // Store as string
-        updateBalanceDisplay();
-        renderInventory();
+// Game State
+let userBalance = 0.00;
+let userInventory = {};
+let currentRolledCard = null; // To store the card that was just rolled
+let cardsForAnimation = []; // Array of all card images for the rolling animation
+
+// --- Utility Functions ---
+
+function formatCurrency(amount) {
+    return amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+}
+
+function updateBalanceDisplay() {
+    const formattedBalance = userBalance.toFixed(2);
+    if (balanceDisplay) {
+        balanceDisplay.textContent = `$${formattedBalance}`;
+    }
+    if (balanceDisplayBottom) {
+        balanceDisplayBottom.textContent = `$${formattedBalance}`;
+    }
+    saveUserData(); // Save balance whenever it updates
+}
+
+function updateInventoryDisplay() {
+    if (!inventoryContainer) {
+        console.error("Inventory container not found in HTML.");
+        return;
+    }
+    inventoryContainer.innerHTML = ''; // Clear existing inventory
+
+    const sortedInventory = Object.values(userInventory).sort((a, b) => {
+        // Sort by rarity: Legendary > Epic > Rare > Uncommon > Common
+        const rarityOrder = { 'Legendary': 5, 'Epic': 4, 'Rare': 3, 'Uncommon': 2, 'Common': 1 };
+        return rarityOrder[b.rarity] - rarityOrder[a.rarity];
+    });
+
+    if (sortedInventory.length === 0) {
+        inventoryContainer.innerHTML = '<p class="empty-inventory-message">Roll a card to start your collection!</p>';
+        if (sellAllButton) sellAllButton.disabled = true; // Disable sell all if inventory is empty
+        return;
     }
 
-    function updateBalanceDisplay() {
-        balanceDisplayElements.forEach(element => {
-            element.textContent = balance.toFixed(2);
-        });
-    }
+    if (sellAllButton) sellAllButton.disabled = false; // Enable sell all if inventory has cards
 
-    function getRandomCard() {
-        let randomNumber = Math.random() * 100;
-        let selectedRarity = '';
-        let cumulativePercentage = 0;
+    sortedInventory.forEach(card => {
+        const cardElement = document.createElement('div');
+        cardElement.classList.add('inventory-card');
+        cardElement.classList.add(card.rarity.toLowerCase()); // Add rarity class for styling
 
-        for (const rarity in rarityDistribution) {
-            cumulativePercentage += rarityDistribution[rarity];
-            if (randomNumber <= cumulativePercentage) {
-                selectedRarity = rarity;
-                break;
-            }
-        }
-        const availableCardsOfRarity = cards.filter(card => card.rarity === selectedRarity);
-        return availableCardsOfRarity[Math.floor(Math.random() * availableCardsOfRarity.length)];
-    }
-
-    function addCardToInventory(card) {
-        // Check if card already exists in inventory (by name and rarity)
-        const existingCardIndex = inventory.findIndex(item => item.name === card.name && item.rarity === card.rarity);
-
-        if (existingCardIndex > -1) {
-            // If it exists, increment quantity
-            inventory[existingCardIndex].quantity = (inventory[existingCardIndex].quantity || 1) + 1;
-        } else {
-            // If not, add new card with quantity 1
-            inventory.push({ ...card, quantity: 1 });
-        }
-        saveGameState();
-    }
-
-    function removeCardFromInventory(cardName, rarity, quantityToRemove = 1) {
-        const index = inventory.findIndex(item => item.name === cardName && item.rarity === rarity);
-        if (index > -1) {
-            if (inventory[index].quantity >= quantityToRemove) {
-                inventory[index].quantity -= quantityToRemove;
-                if (inventory[index].quantity <= 0) {
-                    inventory.splice(index, 1); // Remove the card completely if quantity is 0 or less
-                }
-                saveGameState();
-                return true;
-            } else {
-                // Not enough quantity to remove
-                return false;
-            }
-        }
-        return false; // Card not found
-    }
-
-    function renderInventory() {
-        inventoryList.innerHTML = ''; // Clear current inventory display (except for the empty message)
-
-        const sortedInventory = [...inventory].sort((a, b) => { // Create a copy to sort
-            // Sort by rarity: Legendary, Epic, Rare, Uncommon, Common
-            const rarityOrder = { "legendary": 5, "epic": 4, "rare": 3, "uncommon": 2, "common": 1 };
-            return rarityOrder[b.rarity] - rarityOrder[a.rarity];
-        });
-
-        if (sortedInventory.length === 0) {
-            emptyInventoryMessage.style.display = 'flex'; // Show the empty message
-            inventoryList.classList.add('empty-state'); // Add class for centering
-            sellAllButton.disabled = true; // Disable sell all if no cards
-            return;
-        } else {
-            emptyInventoryMessage.style.display = 'none'; // Hide the empty message
-            inventoryList.classList.remove('empty-state'); // Remove class for centering
-            sellAllButton.disabled = false; // Enable sell all if cards exist
+        // Add count overlay if more than one
+        let countOverlay = '';
+        if (card.count && card.count > 1) {
+            countOverlay = `<div class="card-count-overlay">${card.count}</div>`;
         }
 
-        sortedInventory.forEach(card => {
-            const cardElement = document.createElement('div');
-            cardElement.classList.add('inventory-card');
-            cardElement.innerHTML = `
-                <img src="${card.image}" alt="${card.name}" class="inventory-card-image">
-                <div class="inventory-card-info">
-                    <span class="inventory-card-title">${card.name}</span>
-                    <span class="inventory-card-rarity ${card.rarity}">${card.rarity}</span>
+        cardElement.innerHTML = `
+            ${countOverlay}
+            <img src="${card.image}" alt="${card.title}" class="inventory-card-image">
+            <div class="inventory-card-info">
+                <span class="inventory-card-title">${card.title}</span>
+                <span class="inventory-card-rarity ${card.rarity.toLowerCase()}">${card.rarity}</span>
                 </div>
-                ${card.quantity > 1 ? `<span class="card-count-overlay">${card.quantity}</span>` : ''}
-                <button class="inventory-card-sell-button" data-name="${card.name}" data-rarity="${card.rarity}">Sell ($${card.value.toFixed(2)})</button>
-            `;
-            // Attach event listener to the specific sell button
-            const sellIndividualButton = cardElement.querySelector('.inventory-card-sell-button');
-            sellIndividualButton.addEventListener('click', (event) => {
-                event.stopPropagation(); // Prevent any parent click events (like card click) from firing
-                openIndividualSellModal(card);
-            });
-            inventoryList.appendChild(cardElement);
-        });
+        `;
+        cardElement.addEventListener('click', () => displayCardDetails(card));
+        inventoryContainer.appendChild(cardElement);
+    });
+}
+
+/**
+ * Manages the visibility of the main roller section elements.
+ * @param {string} state - 'initial', 'rolling', 'display'
+ */
+function setRollerDisplayState(state) {
+    if (!initialRollMessage || !rollingCardAnimation || !cardDisplay || !rollButton || !rollAgainButton || !sellCardButton) {
+        console.error("Missing critical roller display elements in HTML.");
+        return;
     }
 
-    // --- Roll Limit & Cooldown Functions ---
+    // Hide all main display areas by default
+    initialRollMessage.style.display = 'none';
+    rollingCardAnimation.style.display = 'none';
+    cardDisplay.style.display = 'none';
+    cardValueDisplay.style.display = 'none'; // Always hide card value details by default
 
-    function updateRollsDisplay() {
-        maxRollsSpan.textContent = MAX_ROLLS_PER_HOUR;
-        rollsRemainingSpan.textContent = MAX_ROLLS_PER_HOUR - rollsUsed;
+    // Hide all action buttons by default
+    rollButton.style.display = 'none';
+    rollAgainButton.style.display = 'none';
+    sellCardButton.style.display = 'none';
 
-        const now = Date.now();
-        if (cooldownEndTime > now) {
-            rollButton.disabled = true;
-            const timeLeft = cooldownEndTime - now;
-            cooldownDisplaySpan.textContent = formatTime(timeLeft);
-            cooldownDisplaySpan.parentElement.style.display = 'flex'; // Show timer
-            rollOutcomeMessage.textContent = 'Roll limit reached. Next roll in:';
-            rollOutcomeMessage.style.color = '#e74c3c'; // Red for warning
-        } else {
-            // Cooldown is over or never started
+    switch (state) {
+        case 'initial':
+            initialRollMessage.style.display = 'flex';
+            rollButton.style.display = 'block';
             rollButton.disabled = false;
-            cooldownDisplaySpan.parentElement.style.display = 'none'; // Hide timer
-            cooldownDisplaySpan.textContent = '00:00:00'; // Reset display
-            clearInterval(timerInterval); // Stop any running timer
-            if (rollsUsed >= MAX_ROLLS_PER_HOUR) { // If rolls were used up, but cooldown is over, reset
-                resetRolls();
-            }
-            rollOutcomeMessage.textContent = ''; // Clear previous message
-            rollOutcomeMessage.style.color = 'var(--stake-text-medium)';
-        }
-    }
-
-    function startCooldown() {
-        cooldownEndTime = Date.now() + COOLDOWN_DURATION_MS;
-        saveGameState(); // Save the new cooldown end time
-        updateRollsDisplay(); // Update display immediately
-        clearInterval(timerInterval); // Clear any existing timer
-        timerInterval = setInterval(() => {
-            updateRollsDisplay();
-            if (Date.now() >= cooldownEndTime) {
-                clearInterval(timerInterval);
-                resetRolls(); // Reset rolls when cooldown is over
-                updateRollsDisplay(); // Update display after reset
-            }
-        }, 1000); // Update every second
-    }
-
-    function resetRolls() {
-        rollsUsed = 0;
-        cooldownEndTime = 0; // Clear cooldown
-        saveGameState();
-        updateRollsDisplay();
-    }
-
-    function formatTime(ms) {
-        if (ms <= 0) return "00:00:00";
-        const totalSeconds = Math.floor(ms / 1000);
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-
-        return [hours, minutes, seconds]
-            .map(t => t.toString().padStart(2, '0'))
-            .join(':');
-    }
-
-    // --- Game Logic Functions ---
-
-    async function rollCard() {
-        // Check roll limit
-        if (rollsUsed >= MAX_ROLLS_PER_HOUR) {
-            showSuccessModal('You have reached your roll limit. Please wait for the cooldown to end.');
-            return;
-        }
-
-        // Disable roll button and update display
-        rollButton.disabled = true;
-        rollOutcomeMessage.textContent = 'Rolling...';
-        rollOutcomeMessage.style.color = 'var(--stake-text-medium)';
-        rollingCardAnimation.style.display = 'block'; // Show rolling animation
-        cardDisplay.style.display = 'none'; // Hide static card display
-
-        rollsUsed++; // Increment roll count
-        saveGameState(); // Save state immediately after roll
-
-        // If this is the roll that hits the limit, start the cooldown
-        if (rollsUsed === MAX_ROLLS_PER_HOUR) {
-            startCooldown();
-        } else {
-            updateRollsDisplay(); // Just update remaining rolls
-        }
-
-        // Simulate rolling time
-        await new Promise(resolve => setTimeout(resolve, 2000)); // 2 seconds animation
-
-        const newCard = getRandomCard();
-        addCardToInventory(newCard);
-
-        rollingCardAnimation.style.display = 'none'; // Hide rolling animation
-        cardDisplay.style.display = 'block'; // Show static card display
-
-        // Update card display with new card info
-        cardImage.src = newCard.image;
-        cardName.textContent = newCard.name;
-        cardRarity.textContent = newCard.rarity;
-        cardRarity.className = `card-rarity ${newCard.rarity}`; // Update class for rarity color
-        cardValue.textContent = newCard.value.toFixed(2);
-
-        // Remove old ribbon if any
-        const oldRibbon = cardDisplay.querySelector('.rarity-ribbon');
-        if (oldRibbon) {
-            oldRibbon.remove();
-        }
-
-        // Add new rarity ribbon
-        const rarityRibbon = document.createElement('div');
-        rarityRibbon.classList.add('rarity-ribbon', newCard.rarity);
-        rarityRibbon.textContent = newCard.rarity;
-        cardDisplay.appendChild(rarityRibbon);
-
-        // Add reveal animation
-        cardDisplay.classList.add('reveal-animation');
-        cardDisplay.addEventListener('animationend', () => {
-            cardDisplay.classList.remove('reveal-animation');
-        }, { once: true });
-
-        rollOutcomeMessage.textContent = `You got: ${newCard.name} (${newCard.rarity}) for $${newCard.value.toFixed(2)}!`;
-        rollOutcomeMessage.style.color = newCard.rarity === 'legendary' ? 'var(--stake-green-primary)' : 'var(--stake-text-light)'; // Highlight legendary
-
-        // Re-enable roll button only if cooldown isn't active
-        if (cooldownEndTime <= Date.now()) {
+            break;
+        case 'rolling':
+            rollingCardAnimation.style.display = 'flex';
+            rollButton.style.display = 'block'; // Keep initial roll button visible but disabled
+            rollButton.disabled = true; // Disable during roll
+            break;
+        case 'display':
+            cardDisplay.style.display = 'block';
+            cardValueDisplay.style.display = 'flex';
+            rollAgainButton.style.display = 'block'; // Show "Roll Again"
+            sellCardButton.style.display = 'block'; // Will be managed by displayCardDetails for inventory cards
+            break;
+        default:
+            console.warn("Unknown roller display state:", state);
+            initialRollMessage.style.display = 'flex'; // Default to initial state
+            rollButton.style.display = 'block';
             rollButton.disabled = false;
-        }
+            break;
+    }
+}
+
+
+function displayCardDetails(card) {
+    // Ensure all necessary DOM elements exist before proceeding
+    const requiredElements = [cardImage, cardTitle, cardRarity, cardValue, rarityRibbon, cardValueDisplay, cardValueDescription];
+    if (requiredElements.some(el => el === null)) {
+        console.error("One or more required DOM elements for card display are missing in HTML.");
+        return;
     }
 
-    // --- Individual Sell Modal Functions ---
+    cardImage.src = card.image;
+    cardImage.alt = card.title;
+    cardTitle.textContent = card.title;
+    cardRarity.textContent = card.rarity;
+    cardRarity.className = `card-rarity ${card.rarity.toLowerCase()}`; // Update class for styling
+    cardValue.textContent = `Value: ${formatCurrency(card.value)}`;
+    rarityRibbon.className = `rarity-ribbon ${card.rarity.toLowerCase()}`;
 
-    function openIndividualSellModal(card) {
-        currentSellingCard = card; // Store the card instance
-        individualModalCardImage.src = card.image;
-        individualModalCardName.textContent = card.name;
-        individualModalCardRarity.textContent = card.rarity;
-        individualModalCardRarity.className = `card-rarity ${card.rarity}`; // Apply rarity class for color
-        individualModalCardValue.textContent = card.value.toFixed(2);
-        individualModalCardAvailableQuantity.textContent = card.quantity;
+    currentRolledCard = card; // Set the current card for potential selling
 
-        sellQuantityInput.value = 1; // Default to selling 1
-        sellQuantityInput.max = card.quantity; // Set max quantity
-        updateIndividualSellTotalValue(); // Update total value initially
-
-        individualSellModalOverlay.classList.add('active');
+    // Show/hide sell button based on card count
+    // If displaying a card from inventory, allow selling if at least one exists
+    // If it's a newly rolled card, it's always available to sell immediately
+    if (userInventory[card.id] && userInventory[card.id].count > 0) {
+        sellCardButton.style.display = 'block';
+    } else {
+        sellCardButton.style.display = 'none'; // Should not happen if coming from inventory for selling, or if it's the last card sold
     }
 
-    function closeIndividualSellModal() {
-        individualSellModalOverlay.classList.remove('active');
-        currentSellingCard = null;
+    setRollerDisplayState('display'); // Set the display state to show the card details
+    cardValueDescription.textContent = 'This card can be sold for its listed value.';
+
+    // Add animation class for reveal
+    cardDisplay.classList.remove('reveal-animation'); // Reset animation
+    void cardDisplay.offsetWidth; // Trigger reflow
+    cardDisplay.classList.add('reveal-animation');
+}
+
+
+// --- Server Communication ---
+
+async function loadUserData() {
+    try {
+        const response = await fetch(`${BASE_URL}/api/user-data`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        userBalance = data.balance || 0.00;
+        // Ensure inventory is an object, converting from Map if necessary (from Mongoose)
+        userInventory = data.inventory ? (data.inventory instanceof Object && !Array.isArray(data.inventory) ? data.inventory : Object.fromEntries(new Map(Object.entries(data.inventory)))) : {};
+        updateBalanceDisplay();
+        updateInventoryDisplay();
+        console.log("User data loaded from server.");
+    } catch (error) {
+        console.error('Error loading user data from server:', error);
+        console.warn("Falling back to localStorage for user data.");
+        // Fallback to localStorage if server fails
+        const storedBalance = localStorage.getItem('userBalance');
+        const storedInventory = localStorage.getItem('userInventory');
+        userBalance = storedBalance ? parseFloat(storedBalance) : 0.00;
+        userInventory = storedInventory ? JSON.parse(storedInventory) : {};
+        updateBalanceDisplay();
+        updateInventoryDisplay();
     }
+}
 
-    function updateIndividualSellTotalValue() {
-        const quantity = parseInt(sellQuantityInput.value);
-        const valuePerCard = currentSellingCard ? currentSellingCard.value : 0;
-        individualModalTotalValue.textContent = (quantity * valuePerCard).toFixed(2);
-    }
-
-    function confirmIndividualSell() {
-        if (!currentSellingCard) {
-            showSuccessModal('Error: No card selected for selling.', false);
-            closeIndividualSellModal();
-            return;
-        }
-
-        const quantityToSell = parseInt(sellQuantityInput.value);
-        const availableQuantity = currentSellingCard.quantity;
-
-        if (isNaN(quantityToSell) || quantityToSell <= 0 || quantityToSell > availableQuantity) {
-            showSuccessModal(`Invalid quantity. Please enter a number between 1 and ${availableQuantity}.`, false);
-            return;
-        }
-
-        if (removeCardFromInventory(currentSellingCard.name, currentSellingCard.rarity, quantityToSell)) {
-            const totalValueSold = currentSellingCard.value * quantityToSell;
-            balance = Math.min(MAX_BALANCE, balance + totalValueSold);
-            showSuccessModal(`Successfully sold ${quantityToSell} x ${currentSellingCard.name} for $${totalValueSold.toFixed(2)}!`);
-            saveGameState(); // Re-render inventory after selling
-        } else {
-            showSuccessModal('Error: Could not sell card(s). Not enough quantity or card not found.', false);
-        }
-        closeIndividualSellModal();
-    }
-
-    // --- Universal Sell All Modal Functions ---
-
-    function openSellAllCardsModal() {
-        if (inventory.length === 0) {
-            showSuccessModal('Your inventory is empty. No cards to sell.', false);
-            return;
-        }
-
-        allCardsToSellList.innerHTML = ''; // Clear previous list
-        let totalValue = 0;
-
-        inventory.forEach(card => {
-            const p = document.createElement('p');
-            p.textContent = `${card.name} (${card.rarity}) x${card.quantity || 1} ($${(card.value * (card.quantity || 1)).toFixed(2)})`;
-            allCardsToSellList.appendChild(p);
-            totalValue += card.value * (card.quantity || 1);
+async function saveUserData() {
+    try {
+        const response = await fetch(`${BASE_URL}/api/save-user-data`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ balance: userBalance, inventory: userInventory }),
         });
-
-        totalAllSellValueSpan.textContent = totalValue.toFixed(2);
-        sellAllModalOverlay.classList.add('active');
-    }
-
-    function closeSellAllCardsModal() {
-        sellAllModalOverlay.classList.remove('active');
-    }
-
-    function confirmSellAllCards() {
-        let totalSoldValue = 0;
-        if (inventory.length > 0) {
-            inventory.forEach(card => {
-                totalSoldValue += card.value * (card.quantity || 1);
-            });
-            inventory = []; // Clear all cards from inventory
-            balance = Math.min(MAX_BALANCE, balance + totalSoldValue);
-            saveGameState();
-            showSuccessModal(`Sold all cards for a total of $${totalSoldValue.toFixed(2)}!`);
-        } else {
-            showSuccessModal('No cards to sell.', false);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-        closeSellAllCardsModal();
+        const result = await response.json();
+        console.log("User data saved to server:", result.message);
+    } catch (error) {
+        console.error('Error saving user data to server:', error);
+        console.warn("Could not save to server. Data might be lost on refresh if not in localStorage.");
+        // Fallback to localStorage if server fails
+        localStorage.setItem('userBalance', userBalance);
+        localStorage.setItem('userInventory', JSON.stringify(userInventory));
     }
+}
 
-    // --- General Success Modal Function ---
-
-    function showSuccessModal(message, isSuccess = true) {
-        successMessage.textContent = message;
-        if (isSuccess) {
-            successMessage.style.color = 'var(--stake-green-primary)';
-        } else {
-            successMessage.style.color = '#e74c3c'; // Red for errors/warnings
+async function fetchAllCardsForAnimation() {
+    try {
+        const response = await fetch(`${BASE_URL}/api/cards-images`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-        successModalOverlay.classList.add('active');
+        const data = await response.json();
+        cardsForAnimation = data;
+        console.log("Cards for animation loaded.");
+    } catch (error) {
+        console.error('Error fetching cards for animation:', error);
+        // Fallback to local placeholders if server fails for animation cards
+        cardsForAnimation = [
+            { id: 'placeholder1', image: 'https://placehold.co/220x308/CCCCCC/000000?text=Card+1' },
+            { id: 'placeholder2', image: 'https://placehold.co/220x308/AAAAAA/FFFFFF?text=Card+2' },
+            { id: 'placeholder3', image: 'https://placehold.co/220x308/DDDDDD/333333?text=Card+3' }
+        ];
     }
+}
 
-    function closeSuccessModal() {
+
+// --- Game Logic ---
+
+// Single Sell Confirmation Modal Functions
+function showConfirmationModal() {
+    if (!confirmationModal || !modalConfirmCardTitle || !modalConfirmCardValue || !currentRolledCard) {
+        console.error("Confirmation modal elements are missing or no card selected.");
+        return;
+    }
+    modalConfirmCardTitle.textContent = currentRolledCard.title;
+    modalConfirmCardValue.textContent = formatCurrency(currentRolledCard.value);
+    confirmationModal.style.display = 'flex'; // Use flex to center
+    confirmationModal.classList.add('active'); // For animation
+}
+
+function hideConfirmationModal() {
+    if (confirmationModal) {
+        confirmationModal.classList.remove('active');
+        // Use a timeout to allow animation to complete before hiding
+        setTimeout(() => {
+            confirmationModal.style.display = 'none';
+        }, 300); // Match CSS transition duration
+    }
+}
+
+// Success Message Modal Functions
+function showSuccessModal(title, message) {
+    if (!successModalOverlay || !successModalTitle || !successModalMessage) {
+        console.error("Success modal elements are missing.");
+        return;
+    }
+    successModalTitle.textContent = title;
+    successModalMessage.textContent = message;
+    successModalOverlay.style.display = 'flex'; // Use flex to center
+    successModalOverlay.classList.add('active'); // For animation
+}
+
+function hideSuccessModal() {
+    if (successModalOverlay) {
         successModalOverlay.classList.remove('active');
+        // Use a timeout to allow animation to complete before hiding
+        setTimeout(() => {
+            successModalOverlay.style.display = 'none';
+        }, 300); // Match CSS transition duration
+    }
+}
+
+function sellCard() {
+    if (!currentRolledCard) {
+        console.error("No card selected to sell.");
+        return;
+    }
+    showConfirmationModal();
+}
+
+async function confirmSellCard() {
+    hideConfirmationModal();
+
+    const cardIdToSell = currentRolledCard.id;
+
+    if (userInventory[cardIdToSell] && userInventory[cardIdToSell].count > 0) {
+        userBalance += currentRolledCard.value;
+        userInventory[cardIdToSell].count--;
+
+        if (userInventory[cardIdToSell].count <= 0) {
+            delete userInventory[cardIdToSell]; // Remove if count is zero
+        }
+        updateBalanceDisplay();
+        updateInventoryDisplay(); // Update inventory display after selling
+
+        console.log(`Sold ${currentRolledCard.title} for ${formatCurrency(currentRolledCard.value)}.`);
+        showSuccessModal("Card Sold!", `You sold ${currentRolledCard.title} for ${formatCurrency(currentRolledCard.value)}!`);
+
+        // No need to hide card details here, it will be handled by the success modal's OK button
+    } else {
+        showSuccessModal("Error", "You don't have this card to sell!");
+    }
+}
+
+// Sell All Cards Modal Functions
+function showSellAllModal() {
+    if (!sellAllModalOverlay || !sellAllCardsList || !sellAllPotentialEarnings) {
+        console.error("Sell All modal elements are missing.");
+        return;
     }
 
-    // --- Event Listeners ---
-    rollButton.addEventListener('click', rollCard);
-    sellAllButton.addEventListener('click', openSellAllCardsModal); // Universal sell all
+    const cardsArray = Object.values(userInventory);
+    if (cardsArray.length === 0) {
+        showSuccessModal("Empty Inventory", "Your inventory is empty! Nothing to sell.");
+        return;
+    }
 
-    // Individual Sell Modal Listeners
-    closeIndividualSellModalButton.addEventListener('click', closeIndividualSellModal);
-    cancelIndividualSellButton.addEventListener('click', closeIndividualSellModal);
-    confirmIndividualSellButton.addEventListener('click', confirmIndividualSell);
-    sellQuantityInput.addEventListener('input', updateIndividualSellTotalValue); // Update total value on quantity change
+    let totalEarnings = 0;
+    sellAllCardsList.innerHTML = ''; // Clear previous list
 
-    // Universal Sell All Modal Listeners
-    closeSellAllModalButton.addEventListener('click', closeSellAllCardsModal);
-    cancelSellAllButton.addEventListener('click', closeSellAllCardsModal);
-    confirmSellAllButton.addEventListener('click', confirmSellAllCards);
+    cardsArray.forEach(card => {
+        const cardValue = card.value * card.count;
+        totalEarnings += cardValue;
 
-    // General Success Modal Listener
-    closeSuccessModalButton.addEventListener('click', closeSuccessModal);
+        const p = document.createElement('p');
+        p.textContent = `${card.title} (x${card.count}) - ${formatCurrency(cardValue)}`;
+        sellAllCardsList.appendChild(p);
+    });
 
-    // --- Initial Load ---
+    sellAllPotentialEarnings.textContent = formatCurrency(totalEarnings);
+    sellAllModalOverlay.style.display = 'flex'; // Use flex to center
+    sellAllModalOverlay.classList.add('active'); // For animation
+}
+
+function hideSellAllModal() {
+    if (sellAllModalOverlay) {
+        sellAllModalOverlay.classList.remove('active');
+        setTimeout(() => {
+            sellAllModalOverlay.style.display = 'none';
+        }, 300); // Match CSS transition duration
+    }
+}
+
+async function confirmSellAllCards() {
+    hideSellAllModal();
+
+    let totalEarnings = 0;
+    for (const cardId in userInventory) {
+        totalEarnings += userInventory[cardId].value * userInventory[cardId].count;
+    }
+
+    userBalance += totalEarnings;
+    userInventory = {}; // Clear inventory
     updateBalanceDisplay();
-    renderInventory();
-    updateRollsDisplay(); // Initial update for rolls and timer
+    updateInventoryDisplay(); // Re-render empty inventory
 
-    // If a cooldown is active from a previous session, restart the timer
-    if (cooldownEndTime > Date.now()) {
-        startCooldown();
+    showSuccessModal("All Cards Sold!", `You sold all cards for a total of ${formatCurrency(totalEarnings)}!`);
+    // backToMainView() will be called when success modal is closed
+}
+
+
+async function startRollingAnimation() {
+    // Ensure critical DOM elements are present
+    const requiredElements = [rollButton, cardDisplay, rollingCardAnimation, rollAgainButton, sellCardButton, initialRollMessage];
+    if (requiredElements.some(el => el === null)) {
+        console.error("One or more required DOM elements for rolling animation are missing in HTML.");
+        return;
     }
+
+    if (cardsForAnimation.length === 0) {
+        console.warn("Cards for animation not loaded yet. Trying to fetch them again.");
+        await fetchAllCardsForAnimation();
+        if (cardsForAnimation.length === 0) {
+            showSuccessModal("Error", "Cannot start roll: Card data not available. Please refresh.");
+            return;
+        }
+    }
+
+    console.log("startRollingAnimation called.");
+    setRollerDisplayState('rolling'); // Set state to rolling
+
+    // Start a continuous loop of random card images
+    let animationInterval = setInterval(() => {
+        const randomIndex = Math.floor(Math.random() * cardsForAnimation.length);
+        rollingCardAnimation.innerHTML = `<img src="${cardsForAnimation[randomIndex].image}" class="rolling-card-image" alt="Rolling Card">`;
+    }, 80); // Faster interval for more intense roll
+
+    // Stop animation after a few seconds and display the rolled card
+    setTimeout(() => {
+        clearInterval(animationInterval);
+        stopRollingAnimationAndDisplayCard();
+    }, 3500); // Roll for 3.5 seconds for more anticipation
+}
+
+async function stopRollingAnimationAndDisplayCard() {
+    // Ensure critical DOM elements are present
+    const requiredElements = [cardImage, cardTitle, cardRarity, cardValue, rarityRibbon, rollingCardAnimation, cardDisplay, cardValueDisplay, cardValueDescription, rollButton, rollAgainButton, sellCardButton];
+    if (requiredElements.some(el => el === null)) {
+        console.error("One or more required DOM elements for card display after roll are missing in HTML.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${BASE_URL}/roll`, { method: 'POST' });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        const rolledCard = data.card;
+
+        currentRolledCard = rolledCard; // Store the rolled card for potential selling
+
+        // Update card display
+        cardImage.src = rolledCard.image;
+        cardImage.alt = rolledCard.title;
+        cardTitle.textContent = rolledCard.title;
+        cardRarity.textContent = rolledCard.rarity;
+        cardRarity.className = `card-rarity ${rolledCard.rarity.toLowerCase()}`; // Add rarity class for styling
+        cardValue.textContent = `Value: ${formatCurrency(rolledCard.value)}`;
+        rarityRibbon.className = `rarity-ribbon ${rolledCard.rarity.toLowerCase()}`; // Add rarity class to ribbon
+
+        // Add to inventory
+        if (userInventory && userInventory.hasOwnProperty(rolledCard.id)) {
+            userInventory[rolledCard.id].count++;
+        } else {
+            userInventory[rolledCard.id] = { ...rolledCard, count: 1 };
+        }
+        updateInventoryDisplay(); // Update inventory display with the new card
+
+        setRollerDisplayState('display'); // Set state to display card
+
+        cardValueDescription.textContent = 'This card has been added to your inventory!';
+
+        // Enable roll button again
+        rollButton.disabled = false; // The initial roll button should be re-enabled if it's the one we're seeing
+
+        saveUserData(); // Save inventory after a roll
+    } catch (error) {
+        console.error('Error fetching rolled card:', error);
+        showSuccessModal("Error", "Failed to roll a card. Please try again.");
+        setRollerDisplayState('initial'); // Return to initial state on error
+    }
+}
+
+function backToMainView() {
+    setRollerDisplayState('initial'); // Set state back to initial
+    currentRolledCard = null; // Clear the current rolled card
+    updateInventoryDisplay(); // Refresh inventory display
+}
+
+// --- Event Listeners ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Add null checks for elements before adding event listeners
+    if (rollButton) rollButton.addEventListener('click', startRollingAnimation);
+    if (rollAgainButton) rollAgainButton.addEventListener('click', startRollingAnimation); // "Roll Again" button now triggers roll
+    if (sellCardButton) sellCardButton.addEventListener('click', sellCard);
+    if (sellAllButton) sellAllButton.addEventListener('click', showSellAllModal);
+
+    // Confirmation Modal Listeners
+    if (confirmSellButton) confirmSellButton.addEventListener('click', confirmSellCard);
+    if (cancelSellButton) cancelSellButton.addEventListener('click', hideConfirmationModal);
+    if (closeConfirmModal) closeConfirmModal.addEventListener('click', hideConfirmationModal);
+    if (confirmationModal) {
+        window.addEventListener('click', (event) => {
+            if (event.target == confirmationModal) {
+                hideConfirmationModal();
+            }
+        });
+    }
+
+    // Sell All Modal Listeners
+    if (confirmSellAllButton) confirmSellAllButton.addEventListener('click', confirmSellAllCards);
+    if (cancelSellAllButton) cancelSellAllButton.addEventListener('click', hideSellAllModal);
+    if (closeSellAllModal) closeSellAllModal.addEventListener('click', hideSellAllModal);
+    if (sellAllModalOverlay) {
+        window.addEventListener('click', (event) => {
+            if (event.target == sellAllModalOverlay) {
+                hideSellAllModal();
+            }
+        });
+    }
+
+    // Success Modal Listeners
+    if (successModalOkButton) successModalOkButton.addEventListener('click', () => {
+        hideSuccessModal();
+        backToMainView(); // Return to main view after success message
+    });
+    if (closeSuccessModal) closeSuccessModal.addEventListener('click', () => {
+        hideSuccessModal();
+        backToMainView(); // Return to main view after success message
+    });
+    if (successModalOverlay) {
+        window.addEventListener('click', (event) => {
+            if (event.target == successModalOverlay) {
+                hideSuccessModal();
+                backToMainView(); // Return to main view after success message
+            }
+        });
+    }
+
+
+    loadUserData(); // Load user data first
+    fetchAllCardsForAnimation(); // Load all cards for the animation
+    setRollerDisplayState('initial'); // Set initial display state
 });
