@@ -148,6 +148,13 @@ body {
     100% { transform: scale(1); opacity: 1; }
 }
 
+/* Keyframes for pulse effect on updated numbers */
+@keyframes pulseValue {
+    0% { transform: scale(1); text-shadow: 0 0 0 rgba(0, 229, 118, 0); }
+    50% { transform: scale(1.05); text-shadow: 0 0 12px var(--stake-green-primary); }
+    100% { transform: scale(1); text-shadow: 0 0 8px var(--stake-border-glow-light); }
+}
+
 
 /* ==================================== */
 /* NEW STYLES FOR HOMEPAGE (index.html) */
@@ -333,6 +340,11 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .game-card-info .game-title {
@@ -1318,6 +1330,18 @@ h1 {
         width: 60px;
         height: 84px;
     }
+    .balance-display {
+        font-size: 2em;
+    }
+    .modal-content {
+        padding: 20px;
+    }
+    .modal-content h3 {
+        font-size: 1.5em;
+    }
+    .modal-content p {
+        font-size: 0.9em;
+    }
 }
 
 
@@ -1367,6 +1391,24 @@ h1 {
     text-align: left;
     text-shadow: 0 0 3px rgba(0, 229, 118, 0.1); /* Subtle glow on labels */
 }
+
+/* New style for the display of selected mines count */
+.selected-mines-display {
+    background: var(--input-bg-gradient);
+    border: 1px solid var(--stake-border-glow-medium);
+    border-radius: 10px;
+    padding: 15px;
+    color: var(--stake-text-light);
+    font-size: 1.2em;
+    font-weight: 700;
+    text-align: center;
+    box-shadow: 0 0 8px rgba(0,0,0,0.5), inset 0 0 5px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+    text-shadow: 0 0 5px rgba(0, 229, 118, 0.2);
+    display: block; /* Make it take full width like an input */
+    margin-bottom: 5px; /* Space between display and button */
+}
+
 
 /* Polished Input with Buttons Container */
 .input-with-buttons {
@@ -1435,38 +1477,7 @@ h1 {
 
 
 /* Polished Select Box (now hidden, but styles kept if needed for other selects) */
-#mines-count {
-    width: 100%;
-    padding: 15px 15px; /* Increased padding */
-    border-radius: 10px; /* Slightly larger radius */
-    background: var(--input-bg-gradient); /* Gradient background */
-    color: var(--stake-text-light);
-    border: 1px solid var(--stake-border-glow-medium); /* Initial subtle border */
-    font-size: 1.2em; /* Larger text */
-    font-weight: 700;
-    -webkit-appearance: none; /* Remove default arrow */
-    -moz-appearance: none;
-    appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2300e576%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13.2-6.4H18.6c-5%200-9.3%201.8-13.2%206.4-3.9%204.5-6%2010-6%2016.3%200%206.2%202.1%2011.7%206%2016.3l127.8%20127.9c3.9%203.9%209.4%206%2015.7%206s11.8-2.1%2015.7-6L287%20102c3.9-4.6%206-10.1%206-16.3s-2.1-11.7-6-16.3z%22%2F%3E%3C%2Fsvg%3E'); /* Green arrow */
-    background-repeat: no-repeat;
-    background-position: right 15px center;
-    background-size: 15px; /* Larger arrow */
-    cursor: pointer;
-    outline: none;
-    box-shadow: 0 0 8px rgba(0,0,0,0.5), inset 0 0 5px rgba(0,0,0,0.3); /* Deeper shadow */
-    transition: all 0.3s ease; /* Smooth transition */
-    text-shadow: 0 0 5px rgba(0, 229, 118, 0.2); /* Subtle text glow */
-}
-
-#mines-count:hover {
-    border-color: rgba(0, 229, 118, 0.4);
-    box-shadow: 0 0 12px rgba(0, 229, 118, 0.3), inset 0 0 8px rgba(0, 229, 118, 0.2);
-}
-
-#mines-count:focus {
-    border-color: var(--input-focus-border);
-    box-shadow: 0 0 15px var(--input-border-glow), inset 0 0 10px var(--stake-green-primary);
-}
+/* #mines-count removed from HTML, its styles are no longer directly used for mines selection */
 
 
 .game-status-display {
@@ -1497,11 +1508,6 @@ h1 {
 /* Animation for payout numbers changing */
 .game-status-display span.animate-update {
     animation: pulseValue 0.3s ease-out;
-}
-@keyframes pulseValue {
-    0% { transform: scale(1); text-shadow: 0 0 0 rgba(0, 229, 118, 0); }
-    50% { transform: scale(1.05); text-shadow: 0 0 12px var(--stake-green-primary); }
-    100% { transform: scale(1); text-shadow: 0 0 8px var(--stake-border-glow-light); }
 }
 
 
@@ -1667,7 +1673,7 @@ h1 {
     }
 
     /* Smaller inputs/selects on mobile */
-    .input-with-buttons input, #mines-count {
+    .input-with-buttons input, .selected-mines-display {
         padding: 12px 12px;
         font-size: 1em;
     }
