@@ -13,8 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const MINE_EMOJI = '💣'; // Bomb emoji
 
     // Payout multipliers based on number of gems revealed (simplified for now)
-    // This can be expanded to be more sophisticated based on mines count and gems revealed
+    // ADDED PAYOUTS FOR 1 AND 2 MINES
     const PAYOUT_MULTIPLIERS = {
+        '1': [1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6, 1.65, 1.7, 1.75, 1.8, 1.85, 1.9, 1.95, 2.0, 2.05, 2.1, 2.15, 2.2], // For 1 mine, max 24 gems
+        '2': [1.08, 1.15, 1.22, 1.3, 1.38, 1.46, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.15, 2.25, 2.35, 2.45, 2.55, 2.65, 2.75, 2.85, 2.95, 3.05, 3.15], // For 2 mines, max 23 gems
         '3': [1.1, 1.3, 1.6, 2.0, 2.5, 3.2, 4.0, 5.0, 6.5, 8.0, 10.0, 12.5, 15.0, 18.0, 22.0, 26.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0],
         '5': [1.1, 1.3, 1.6, 2.0, 2.5, 3.2, 4.0, 5.0, 6.5, 8.0, 10.0, 12.5, 15.0, 18.0, 22.0, 26.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0],
         '8': [1.2, 1.5, 1.9, 2.4, 3.0, 3.8, 4.8, 6.0, 7.5, 9.5, 12.0, 15.0, 18.0, 22.0, 27.0, 33.0, 40.0, 48.0, 58.0, 70.0, 85.0, 100.0],
@@ -22,13 +24,17 @@ document.addEventListener('DOMContentLoaded', () => {
         '15': [1.5, 2.0, 2.7, 3.6, 4.8, 6.5, 8.7, 11.5, 15.0, 20.0, 26.0, 34.0, 44.0, 57.0, 74.0, 96.0, 125.0, 160.0, 200.0, 250.0, 300.0, 350.0],
         '20': [2.0, 2.8, 4.0, 5.5, 7.5, 10.5, 14.5, 20.0, 27.5, 37.5, 50.0, 68.0, 92.0, 125.0, 170.0, 230.0, 310.0, 420.0, 570.0, 770.0, 1000.0, 1300.0]
     };
+    // Available mine counts for the selection modal
+    const AVAILABLE_MINES_COUNTS = [1, 2, 3, 5, 8, 10, 15, 20];
+
 
     // --- DOM Elements ---
     const balanceDisplayElements = document.querySelectorAll('#header-balance');
     const betAmountInput = document.getElementById('bet-amount');
     const halfBetButton = document.getElementById('half-bet');
     const doubleBetButton = document.getElementById('double-bet');
-    const minesCountSelect = document.getElementById('mines-count');
+    const minesCountSelect = document.getElementById('mines-count'); // This will now just display the selected value
+    const changeMinesButton = document.getElementById('change-mines-button'); // New button to open modal
     const currentMultiplierSpan = document.getElementById('current-multiplier');
     const potentialPayoutSpan = document.getElementById('potential-payout');
     const betButton = document.getElementById('bet-button');
@@ -37,26 +43,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const minesBoard = document.getElementById('mines-board');
     const gameMessage = document.getElementById('game-message');
 
-    // Modals (reusing existing structure)
+    // Modals
     const successModalOverlay = document.getElementById('success-modal-overlay');
     const closeSuccessModalButton = document.getElementById('close-success-modal');
     const successMessage = document.getElementById('success-message');
 
+    // NEW: Mine Selection Modal Elements
+    const mineSelectionModalOverlay = document.getElementById('mine-selection-modal-overlay');
+    const mineSelectionGrid = mineSelectionModalOverlay.querySelector('.mine-selection-grid');
+    const confirmMinesButton = document.getElementById('confirm-mines-button');
+
     // --- Game State Variables ---
     let balance = parseFloat(localStorage.getItem('balance')) || INITIAL_BALANCE;
-    let currentBet = 0; // This will be set from betAmountInput.value when game starts
-    let numberOfMines = parseInt(minesCountSelect.value, 10);
+    let currentBet = 0;
+    let numberOfMines = parseInt(localStorage.getItem('minesCount') || '5', 10); // Load saved mine count or default to 5
     let minesLocations = []; // Array of indices where mines are located
     let revealedCells = []; // Array of indices of revealed cells
     let gemsFound = 0;
     let gameStarted = false;
     let gameOver = false;
+    let selectedMinesFromModal = numberOfMines; // Temporarily holds selection from modal
 
     // --- Helper Functions ---
 
     function saveBalance() {
         localStorage.setItem('balance', balance.toFixed(2));
         updateBalanceDisplay();
+    }
+
+    function saveMinesCount() {
+        localStorage.setItem('minesCount', numberOfMines.toString());
     }
 
     function updateBalanceDisplay() {
@@ -123,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         betButton.disabled = false;
         cashOutButton.disabled = true;
         betAmountInput.disabled = false;
-        minesCountSelect.disabled = false;
+        changeMinesButton.disabled = false; // Enable change mines button
         gameMessage.textContent = 'Click "Bet" to start a new game!';
         gameMessage.style.color = 'var(--stake-text-light)';
         updatePayoutDisplay(); // Reset multiplier and payout display based on current bet input
@@ -136,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         betButton.disabled = false;
         cashOutButton.disabled = true;
         betAmountInput.disabled = false;
-        minesCountSelect.disabled = false;
+        changeMinesButton.disabled = false; // Enable change mines button
 
         // Reveal all cells
         const cells = minesBoard.children;
@@ -219,6 +235,55 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Mine Selection Modal Functions ---
+    function openMineSelectionModal() {
+        mineSelectionModalOverlay.classList.add('active');
+        populateMineSelectionGrid();
+        // Pre-select the current number of mines in the modal
+        const currentSelected = mineSelectionGrid.querySelector(`.mine-option[data-mines="${numberOfMines}"]`);
+        if (currentSelected) {
+            currentSelected.classList.add('selected');
+        }
+    }
+
+    function closeMineSelectionModal() {
+        mineSelectionModalOverlay.classList.remove('active');
+    }
+
+    function populateMineSelectionGrid() {
+        mineSelectionGrid.innerHTML = ''; // Clear previous options
+        AVAILABLE_MINES_COUNTS.forEach(count => {
+            const optionDiv = document.createElement('div');
+            optionDiv.classList.add('mine-option');
+            optionDiv.dataset.mines = count;
+            optionDiv.innerHTML = `
+                <span class="mine-count-number">${count}</span>
+                <span class="mine-count-text">Mine${count > 1 ? 's' : ''}</span>
+            `;
+            optionDiv.addEventListener('click', () => {
+                // Remove 'selected' from all other options
+                mineSelectionGrid.querySelectorAll('.mine-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                // Add 'selected' to the clicked option
+                optionDiv.classList.add('selected');
+                selectedMinesFromModal = count; // Store the selected value
+            });
+            mineSelectionGrid.appendChild(optionDiv);
+        });
+    }
+
+    function confirmMineSelection() {
+        numberOfMines = selectedMinesFromModal;
+        minesCountSelect.value = numberOfMines; // Update the hidden select element
+        saveMinesCount(); // Save the new mine count
+        updatePayoutDisplay(); // Update payout display with new mine count
+        closeMineSelectionModal();
+        gameMessage.textContent = `Mines set to ${numberOfMines}. Click "Bet" to start a new game!`;
+        gameMessage.style.color = 'var(--stake-text-light)';
+    }
+
+
     // --- Event Handlers ---
 
     function startGame() {
@@ -228,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         currentBet = parseFloat(betAmountInput.value);
-        numberOfMines = parseInt(minesCountSelect.value, 10);
+        // numberOfMines is already set from the modal selection
 
         if (isNaN(currentBet) || currentBet <= 0) {
             showSuccessModal('Please enter a valid bet amount.', false);
@@ -253,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameOver = false;
         betButton.disabled = true;
         betAmountInput.disabled = true;
-        minesCountSelect.disabled = true;
+        changeMinesButton.disabled = true; // Disable change mines button during game
         minesBoard.classList.add(GAME_ACTIVE_CLASS); // Add active class to board
         gameMessage.textContent = 'Game started! Click a cell to reveal.';
         gameMessage.style.color = 'var(--stake-text-light)';
@@ -276,6 +341,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Initialization ---
     updateBalanceDisplay();
     generateBoard(); // Initial board generation
+    minesCountSelect.value = numberOfMines; // Set the display value of the hidden select
+    updatePayoutDisplay(); // Initial update of potential payout based on loaded mine count
 
     // Event Listeners
     betButton.addEventListener('click', startGame);
@@ -289,8 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             betAmountInput.value = (currentVal / 2).toFixed(2);
         }
-        // Visually update potential payout when bet amount changes manually
-        if (!gameStarted) {
+        if (!gameStarted) { // Only update payout display if game hasn't started
             updatePayoutDisplay();
         }
     });
@@ -302,8 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             betAmountInput.value = (currentVal * 2).toFixed(2);
         }
-        // Visually update potential payout when bet amount changes manually
-        if (!gameStarted) {
+        if (!gameStarted) { // Only update payout display if game hasn't started
             updatePayoutDisplay();
         }
     });
@@ -316,20 +381,17 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             betAmountInput.value = val.toFixed(2);
         }
-        // Visually update potential payout when bet amount changes manually
-        if (!gameStarted) {
+        if (!gameStarted) { // Only update payout display if game hasn't started
             updatePayoutDisplay();
         }
     });
 
-    minesCountSelect.addEventListener('change', () => {
-        numberOfMines = parseInt(minesCountSelect.value, 10);
-        // If game is not active, update potential payout display based on new mine count
-        if (!gameStarted && !gameOver) {
-            updatePayoutDisplay();
-        }
-    });
+    // Event listener for the new "Change Mines" button
+    changeMinesButton.addEventListener('click', openMineSelectionModal);
+    confirmMinesButton.addEventListener('click', confirmMineSelection);
 
-    // Initial update of potential payout when page loads to reflect default bet/mines
-    updatePayoutDisplay();
+    // Show mine selection modal on initial load if no game is active
+    if (!gameStarted && !gameOver) {
+        openMineSelectionModal();
+    }
 });
