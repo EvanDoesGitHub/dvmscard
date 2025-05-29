@@ -33,7 +33,9 @@
 
             <div class="control-group">
                 <label for="mines-count">Number of Mines:</label>
-                <select id="mines-count">
+                <select id="mines-count" disabled>
+                    <option value="1">1 Mine</option>
+                    <option value="2">2 Mines</option>
                     <option value="3">3 Mines</option>
                     <option value="5" selected>5 Mines</option>
                     <option value="8">8 Mines</option>
@@ -41,6 +43,7 @@
                     <option value="15">15 Mines</option>
                     <option value="20">20 Mines</option>
                 </select>
+                <button id="change-mines-button" class="action-button small-button">Change Mines</button>
             </div>
 
             <div class="game-status-display">
@@ -69,6 +72,17 @@
             <p id="success-message"></p>
             <div class="modal-buttons">
                 <button id="close-success-modal" class="action-button">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mine-selection-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Select Number of Mines</h3>
+            <div class="mine-selection-grid">
+                </div>
+            <div class="modal-buttons">
+                <button id="confirm-mines-button" class="action-button">Confirm Selection</button>
             </div>
         </div>
     </div>
