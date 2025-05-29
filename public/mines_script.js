@@ -148,7 +148,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updatePayoutDisplay() {
-        const payoutBase = gameStarted ? currentBet : parseFloat(betAmountInput.value || '0'); // Ensure default to 0 if input is empty
+        // Use currentBet if game has started, otherwise use the value from the bet input
+        const payoutBase = gameStarted ? currentBet : parseFloat(betAmountInput.value || '0'); 
         const multiplier = calculatePayoutMultiplier(gemsFound, numberOfMines);
         const potentialPayout = (payoutBase * multiplier).toFixed(2);
 
@@ -182,7 +183,8 @@ document.addEventListener('DOMContentLoaded', () => {
         changeMinesButton.disabled = false; // Enable change mines button
         gameMessage.textContent = 'Click "Bet" to start a new game!';
         gameMessage.style.color = 'var(--stake-text-light)';
-        updatePayoutDisplay(); // Reset multiplier and payout display based on current bet input
+        // Do NOT call updatePayoutDisplay here with currentBet = 0, as it would show 0.00 before bet is placed
+        // The betAmountInput.value change listener will handle the initial display.
         generateBoard(); // Regenerate a fresh board for the next game
     }
 
@@ -211,6 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gameMessage.textContent = `CASHED OUT! You won $${winnings.toFixed(2)}!`;
             gameMessage.style.color = 'var(--stake-green-primary)'; // Green for win
         }
+        updatePayoutDisplay(); // Update payout display to show final state (0 for loss, actual for win)
     }
 
     // Updated revealCellContent to use emojis
@@ -338,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function confirmMineSelection() {
         numberOfMines = selectedMinesFromModal;
         saveMinesCount(); // Save the new mine count and update display element
-        updatePayoutDisplay(); // Update payout display with new mine count
+        updatePayoutDisplay(); // Update payout display with new mine count based on current bet input value
         closeMineSelectionModal();
         gameMessage.textContent = `Mines set to ${numberOfMines}. Click "Bet" to start a new game!`;
         gameMessage.style.color = 'var(--stake-text-light)';
@@ -353,14 +356,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        currentBet = parseFloat(betAmountInput.value);
-        // numberOfMines is already set from the modal selection
-
-        if (isNaN(currentBet) || currentBet <= 0) {
+        const betValue = parseFloat(betAmountInput.value);
+        
+        if (isNaN(betValue) || betValue <= 0) {
             showSuccessModal('Please enter a valid bet amount.', false);
             return;
         }
-        if (currentBet > balance) {
+        if (betValue > balance) {
             showSuccessModal('Insufficient balance to place this bet.', false);
             return;
         }
@@ -371,10 +373,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        currentBet = betValue; // Set currentBet for the round
         balance -= currentBet;
         saveBalance(); // Deduct bet immediately
 
-        resetGame(); // Reset game state and board visuals
+        resetGame(); // Reset game state and board visuals (this also sets currentBet to 0 and gemsFound to 0)
+        
+        // IMPORTANT: Re-set currentBet AFTER resetGame, as resetGame sets it to 0
+        currentBet = betValue; 
+
         generateMines(); // Place mines for the new game
         
         gameStarted = true;
