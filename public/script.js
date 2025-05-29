@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- Constants and Configuration ---
-    const MAX_BALANCE = 1000000; // Max balance for the game
+    const MAX_BALANCE = 1000000000000000000000; // Max balance for the game
     const MIN_BALANCE_FOR_ROLL = 0; // Cost to roll a card - SET TO 0 FOR FREE ROLLS!
-    const INITIAL_BALANCE = 100; // Starting balance for new players
+    const INITIAL_BALANCE = 0; // Starting balance for new players
     const MAX_ROLLS_PER_HOUR = 10; // Max rolls allowed within one hour
     const COOLDOWN_DURATION_MS = 60 * 60 * 1000; // 1 hour in milliseconds
 
