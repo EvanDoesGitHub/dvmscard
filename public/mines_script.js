@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- Constants and Configuration ---
-    const INITIAL_BALANCE = 100;
-    const MAX_BALANCE = 1000000;
+    const INITIAL_BALANCE = 0;
+    const MAX_BALANCE = 1000000000000000000000;
     const GRID_SIZE = 25; // 5x5 grid
     const MINE_CELL_CLASS = 'mine-cell';
     const GEM_CELL_CLASS = 'gem-cell';
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Game State Variables ---
     let balance = parseFloat(localStorage.getItem('balance')) || INITIAL_BALANCE;
-    let currentBet = 0;
+    let currentBet = 0; // This will be set from betAmountInput.value when game starts
     let numberOfMines = parseInt(minesCountSelect.value, 10);
     let minesLocations = []; // Array of indices where mines are located
     let revealedCells = []; // Array of indices of revealed cells
@@ -102,16 +102,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updatePayoutDisplay() {
+        // Use betAmountInput.value for potential payout calculation if game hasn't started
+        // Otherwise, use currentBet (which is fixed once game starts)
+        const payoutBase = gameStarted ? currentBet : parseFloat(betAmountInput.value);
         const multiplier = calculatePayoutMultiplier(gemsFound, numberOfMines);
+
         currentMultiplierSpan.textContent = `${multiplier.toFixed(2)}x`;
-        potentialPayoutSpan.textContent = (currentBet * multiplier).toFixed(2);
-        cashOutAmountSpan.textContent = (currentBet * multiplier).toFixed(2);
+        potentialPayoutSpan.textContent = (payoutBase * multiplier).toFixed(2);
+        cashOutAmountSpan.textContent = (payoutBase * multiplier).toFixed(2);
     }
 
     function resetGame() {
         gameStarted = false;
         gameOver = false;
-        currentBet = 0;
+        currentBet = 0; // Reset currentBet
         gemsFound = 0;
         revealedCells = [];
         minesBoard.innerHTML = ''; // Clear board
@@ -122,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         minesCountSelect.disabled = false;
         gameMessage.textContent = 'Click "Bet" to start a new game!';
         gameMessage.style.color = 'var(--stake-text-light)';
-        updatePayoutDisplay(); // Reset multiplier and payout display
+        updatePayoutDisplay(); // Reset multiplier and payout display based on current bet input
         generateBoard(); // Regenerate a fresh board for the next game
     }
 
@@ -164,14 +168,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (minesLocations.includes(index)) {
             cellElement.classList.add(MINE_CELL_CLASS);
             cellElement.textContent = MINE_EMOJI; // Use emoji
-            cellElement.style.setProperty('--mine-color', '#e74c3c'); // Red color for mine
+            // No need for --mine-color property, CSS handles it
             if (!forceReveal) { // Only end game if it was the player's direct click on a mine
                 endGame(true);
             }
         } else {
             cellElement.classList.add(GEM_CELL_CLASS);
             cellElement.textContent = GEM_EMOJI; // Use emoji
-            cellElement.style.setProperty('--gem-color', 'var(--stake-green-primary)'); // Green color for gem
+            // No need for --gem-color property, CSS handles it
             
             if (!forceReveal) { // Only count gems and update payout if not a forced reveal at end of game
                 gemsFound++;
@@ -253,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
         minesBoard.classList.add(GAME_ACTIVE_CLASS); // Add active class to board
         gameMessage.textContent = 'Game started! Click a cell to reveal.';
         gameMessage.style.color = 'var(--stake-text-light)';
-        updatePayoutDisplay(); // Initialize payout display
+        updatePayoutDisplay(); // Initialize payout display with actual bet
     }
 
     function cashOut() {
