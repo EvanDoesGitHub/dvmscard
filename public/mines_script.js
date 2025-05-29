@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- Constants and Configuration ---
-    const INITIAL_BALANCE = 0;
-    const MAX_BALANCE = 1000000000000000000000;
+    const INITIAL_BALANCE = 100;
+    const MAX_BALANCE = 1000000;
     const GRID_SIZE = 25; // 5x5 grid
     const MINE_CELL_CLASS = 'mine-cell';
     const GEM_CELL_CLASS = 'gem-cell';
@@ -12,20 +12,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const GEM_EMOJI = '💎'; // Diamond emoji
     const MINE_EMOJI = '💣'; // Bomb emoji
 
-    // Payout multipliers based on number of gems revealed (simplified for now)
-    // ADDED PAYOUTS FOR 1 AND 2 MINES
+    // Payout multipliers based on number of gems revealed (from provided chart image_3acad2.jpg)
+    // The arrays represent multipliers for 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 gems respectively.
+    // Each key corresponds to the number of mines.
     const PAYOUT_MULTIPLIERS = {
-        '1': [1.05, 1.10, 1.15, 1.20, 1.25, 1.30, 1.35, 1.40, 1.45, 1.50, 1.55, 1.60, 1.65, 1.70, 1.75, 1.80, 1.85, 1.90, 1.95, 2.00, 2.05, 2.10, 2.15, 2.20], // For 1 mine, max 24 gems
-        '2': [1.08, 1.15, 1.22, 1.30, 1.38, 1.46, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.15, 2.25, 2.35, 2.45, 2.55, 2.65, 2.75, 2.85, 2.95, 3.05, 3.15], // For 2 mines, max 23 gems
-        '3': [1.10, 1.30, 1.60, 2.00, 2.50, 3.20, 4.00, 5.00, 6.50, 8.00, 10.00, 12.50, 15.00, 18.00, 22.00, 26.00, 30.00, 35.00, 40.00, 45.00, 50.00, 55.00],
-        '5': [1.15, 1.40, 1.75, 2.20, 2.80, 3.60, 4.60, 5.90, 7.50, 9.50, 12.00, 15.50, 20.00, 25.50, 32.50, 41.50, 53.00, 67.00, 85.00, 108.00],
-        '8': [1.20, 1.50, 1.90, 2.40, 3.00, 3.80, 4.80, 6.00, 7.50, 9.50, 12.00, 15.00, 18.00, 22.00, 27.00, 33.00, 40.00, 48.00, 58.00, 70.00, 85.00, 100.00],
-        '10': [1.30, 1.70, 2.20, 2.80, 3.60, 4.60, 5.90, 7.50, 9.50, 12.00, 15.00, 19.00, 24.00, 30.00, 38.00, 48.00, 60.00, 75.00, 95.00, 120.00, 150.00, 180.00],
-        '15': [1.50, 2.00, 2.70, 3.60, 4.80, 6.50, 8.70, 11.50, 15.00, 20.00, 26.00, 34.00, 44.00, 57.00, 74.00, 96.00, 125.00, 160.00, 200.00, 250.00, 300.00, 350.00],
-        '20': [2.00, 2.80, 4.00, 5.50, 7.50, 10.50, 14.50, 20.00, 27.50, 37.50, 50.00, 68.00, 92.00, 125.00, 170.00, 230.00, 310.00, 420.00, 570.00, 770.00, 1000.00, 1300.00]
+        '1': [1.01, 1.08, 1.12, 1.18, 1.24, 1.30, 1.37, 1.46, 1.55, 1.65, 1.77, 1.90, 2.06, 2.25, 2.47, 2.75, 3.09, 3.54, 4.12, 4.95, 6.19, 8.25, 12.37, 24.75],
+        '2': [1.08, 1.17, 1.29, 1.41, 1.56, 1.74, 1.94, 2.18, 2.47, 2.83, 3.26, 3.81, 4.50, 5.40, 6.60, 8.25, 10.61, 14.14, 19.80, 29.70, 49.50, 99.00, 297.00],
+        '3': [1.12, 1.29, 1.48, 1.71, 2.00, 2.35, 2.79, 3.35, 4.07, 5.00, 6.26, 7.96, 10.35, 13.80, 18.97, 27.11, 40.66, 65.06, 113.85, 227.70, 569.25, 2277.00],
+        '4': [1.18, 1.41, 1.71, 2.09, 2.58, 3.23, 4.09, 5.26, 6.88, 9.17, 12.51, 17.52, 25.30, 37.95, 59.64, 99.39, 178.91, 357.81, 834.90, 2504.00, 12523.00],
+        '5': [1.24, 1.56, 2.00, 2.58, 3.39, 4.52, 6.14, 8.50, 12.04, 17.52, 26.77, 40.87, 66.41, 113.85, 208.72, 417.45, 939.26, 2504.00, 8766.00, 52598.00],
+        '6': [1.30, 1.74, 2.35, 3.23, 4.52, 6.46, 9.44, 14.17, 21.89, 35.03, 58.38, 102.17, 189.76, 379.50, 834.90, 2087.00, 6261.00, 25047.00, 175329.00],
+        '7': [1.37, 1.94, 2.79, 4.09, 6.14, 9.44, 14.95, 24.47, 41.60, 73.95, 138.66, 277.33, 600.87, 1442.00, 3965.00, 13219.00, 59486.00, 475893.00],
+        '8': [1.46, 2.18, 3.35, 5.26, 8.50, 14.17, 24.47, 44.05, 83.20, 166.40, 356.56, 831.98, 2163.00, 6489.00, 23794.00, 118973.00, 1070759.00],
+        '9': [1.55, 2.47, 4.07, 6.88, 12.04, 21.89, 41.60, 83.20, 176.80, 404.10, 1010.00, 2828.00, 9193.00, 36773.00, 202254.00, 2022545.00],
+        '10': [1.65, 2.83, 5.00, 9.17, 17.52, 35.03, 73.95, 166.40, 404.10, 1077.00, 3232.00, 11314.00, 49031.00, 294188.00, 3236072.00],
+        '11': [1.77, 3.26, 6.26, 12.51, 26.27, 58.38, 136.66, 356.56, 1010.00, 3232.00, 12123.00, 56574.00, 367735.00, 4412826.00],
+        '12': [1.90, 3.81, 7.96, 17.52, 40.87, 102.17, 277.33, 831.98, 2828.00, 11314.00, 56574.00, 396022.00, 5148297.00],
+        '13': [2.06, 4.50, 10.35, 25.30, 66.41, 189.76, 600.87, 2163.00, 9193.00, 49031.00, 367735.00, 5148297.00],
+        '14': [2.25, 5.40, 13.80, 37.95, 113.85, 379.50, 1442.00, 6489.00, 36773.00, 294188.00, 4412826.00],
+        '15': [2.47, 6.60, 18.97, 59.64, 208.72, 834.90, 3965.00, 23794.00, 202254.00, 3236072.00],
+        '16': [2.75, 8.25, 27.11, 99.39, 417.45, 2087.00, 13219.00, 118973.00, 2022545.00],
+        '17': [3.09, 10.61, 40.66, 178.91, 939.26, 6261.00, 59486.00, 1070759.00],
+        '18': [3.54, 14.14, 65.06, 357.81, 2504.00, 25047.00, 475893.00],
+        '19': [4.12, 19.80, 113.85, 834.90, 8766.00, 175329.00],
+        '20': [4.95, 29.70, 227.70, 2504.00, 52598.00],
+        '21': [6.19, 49.50, 569.25, 12523.00],
+        '22': [8.25, 99.00, 2277.00],
+        '23': [12.36, 297.00],
+        '24': [24.75]
     };
     // Available mine counts for the selection modal
-    const AVAILABLE_MINES_COUNTS = [1, 2, 3, 5, 8, 10, 15, 20];
+    const AVAILABLE_MINES_COUNTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
 
 
     // --- DOM Elements ---
@@ -112,16 +129,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function calculatePayoutMultiplier(gemsFound, mines) {
         const multipliers = PAYOUT_MULTIPLIERS[mines.toString()];
+        
+        // If no multipliers for this mine count or no gems found, return base multiplier
         if (!multipliers || gemsFound === 0) {
             return 1.00;
         }
+
         // Ensure we don't go out of bounds for the multiplier array
         // gemsFound is 1-indexed for the user, but 0-indexed for array access
-        return multipliers[gemsFound - 1] || multipliers[multipliers.length - 1];
+        const multiplierIndex = gemsFound - 1;
+        if (multiplierIndex >= 0 && multiplierIndex < multipliers.length) {
+            return multipliers[multiplierIndex];
+        } else {
+            // If somehow gemsFound exceeds available multipliers for this mine count,
+            // return the last available multiplier or a default.
+            return multipliers[multipliers.length - 1] || 1.00;
+        }
     }
 
     function updatePayoutDisplay() {
-        const payoutBase = gameStarted ? currentBet : parseFloat(betAmountInput.value);
+        const payoutBase = gameStarted ? currentBet : parseFloat(betAmountInput.value || '0'); // Ensure default to 0 if input is empty
         const multiplier = calculatePayoutMultiplier(gemsFound, numberOfMines);
         const potentialPayout = (payoutBase * multiplier).toFixed(2);
 
