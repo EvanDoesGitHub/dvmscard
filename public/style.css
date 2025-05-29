@@ -1434,7 +1434,7 @@ h1 {
 }
 
 
-/* Polished Select Box */
+/* Polished Select Box (now hidden, but styles kept if needed for other selects) */
 #mines-count {
     width: 100%;
     padding: 15px 15px; /* Increased padding */
@@ -1610,6 +1610,14 @@ h1 {
     /* Styles are inherited from .action-button already */
 }
 
+/* New small button style for "Change Mines" */
+.action-button.small-button {
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
 
 /* Responsive adjustments for Mines Game */
 @media (max-width: 1024px) {
@@ -1694,5 +1702,113 @@ h1 {
 
     .game-message {
         font-size: 1.1em;
+    }
+}
+
+
+/* ==================================== */
+/* NEW STYLES FOR MINE SELECTION MODAL */
+/* ==================================== */
+
+#mine-selection-modal-overlay .modal-content {
+    max-width: 550px; /* Wider for the grid */
+    padding: 40px; /* More padding */
+}
+
+#mine-selection-modal-overlay h3 {
+    margin-bottom: 30px;
+    font-size: 2.2em; /* Larger heading */
+}
+
+.mine-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Responsive grid */
+    gap: 15px;
+    margin-bottom: 30px;
+    width: 100%;
+    max-width: 450px; /* Max width for the grid within modal */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.mine-option {
+    background: linear-gradient(135deg, #2a2d32 0%, #1c1f23 100%); /* Dark gradient background */
+    border: 2px solid rgba(0, 229, 118, 0.1); /* Subtle border */
+    border-radius: 12px;
+    padding: 15px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4), inset 0 0 5px rgba(0,0,0,0.2);
+}
+
+.mine-option:hover {
+    transform: translateY(-3px) scale(1.02);
+    border-color: rgba(0, 229, 118, 0.4);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.5), inset 0 0 8px rgba(0, 229, 118, 0.3);
+}
+
+.mine-option.selected {
+    border-color: var(--stake-green-primary);
+    box-shadow: 0 0 20px var(--stake-border-glow-light), inset 0 0 10px var(--stake-green-primary);
+    background: linear-gradient(135deg, var(--stake-green-primary) 0%, var(--stake-green-secondary) 100%); /* Green gradient when selected */
+    color: var(--stake-dark-blue-bg); /* Dark text on green background */
+    transform: scale(1.05); /* Slightly larger when selected */
+}
+
+.mine-option .mine-count-number {
+    font-size: 2.5em;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 5px;
+    color: var(--stake-green-primary); /* Default green */
+    text-shadow: 0 0 8px rgba(0, 229, 118, 0.5);
+    transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.mine-option.selected .mine-count-number {
+    color: var(--stake-dark-blue-bg); /* Dark text on selected green */
+    text-shadow: none; /* Remove glow when selected */
+}
+
+.mine-option .mine-count-text {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: var(--stake-text-medium); /* Default medium grey */
+    text-transform: uppercase;
+    transition: color 0.2s ease;
+}
+
+.mine-option.selected .mine-count-text {
+    color: var(--stake-dark-blue-bg); /* Dark text on selected green */
+}
+
+/* Responsive adjustments for Mine Selection Modal */
+@media (max-width: 600px) {
+    #mine-selection-modal-overlay .modal-content {
+        padding: 25px;
+        width: 95%;
+    }
+    #mine-selection-modal-overlay h3 {
+        font-size: 1.8em;
+        margin-bottom: 20px;
+    }
+    .mine-selection-grid {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); /* Smaller grid items */
+        gap: 10px;
+        max-width: 350px;
+    }
+    .mine-option {
+        padding: 10px 5px;
+        border-radius: 8px;
+    }
+    .mine-option .mine-count-number {
+        font-size: 2em;
+    }
+    .mine-option .mine-count-text {
+        font-size: 0.8em;
     }
 }
