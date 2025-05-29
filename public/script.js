@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rollingCardAnimation = document.getElementById('rolling-card-animation');
     const rollOutcomeMessage = document.getElementById('roll-outcome-message');
     const inventoryList = document.getElementById('inventory-list');
-    const emptyInventoryMessage = document.querySelector('.empty-inventory-message'); // Corrected selector
+    const emptyInventoryMessage = document.querySelector('.empty-inventory-message');
     const sellAllButton = document.getElementById('sell-all-button');
 
     // Modals
@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rollsRemainingSpan = document.getElementById('rolls-remaining');
     const maxRollsSpan = document.getElementById('max-rolls');
     const cooldownDisplaySpan = document.getElementById('cooldown-display');
-    const cooldownTimerContainer = document.getElementById('roll-limit-container').querySelector('.cooldown-timer'); // Added for hiding/showing
+    const cooldownTimerContainer = document.getElementById('roll-limit-container').querySelector('.cooldown-timer');
 
     // --- Game State Variables (Persisted in localStorage) ---
     let balance = parseFloat(localStorage.getItem('balance')) || INITIAL_BALANCE;
@@ -200,10 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             // Cooldown has expired or was never active
             clearInterval(timerInterval); // Stop any running timer
-            if (rollsUsed >= MAX_ROLLS_PER_HOUR) {
-                // If rolls were used up, but cooldown is now over, reset them
-                resetRolls(); // This will also call saveGameState()
-            }
+            // Removed the problematic `if (rollsUsed >= MAX_ROLLS_PER_HOUR) { resetRolls(); }` here
             rollButton.disabled = false;
             cooldownTimerContainer.style.display = 'none'; // Hide cooldown timer
             cooldownDisplaySpan.textContent = '00:00:00'; // Ensure display is 00:00:00
@@ -214,15 +211,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function manageCooldown() {
         const now = Date.now();
+
+        // If rolls are used up AND cooldown is not already active (or has expired), start a new one
         if (rollsUsed >= MAX_ROLLS_PER_HOUR && cooldownEndTime <= now) {
-            // If rolls are used up AND cooldown is not already active/expired, start a new one
             cooldownEndTime = now + COOLDOWN_DURATION_MS;
             saveGameState(); // Save the new cooldown end time
-        } else if (cooldownEndTime <= now && rollsUsed < MAX_ROLLS_PER_HOUR) {
-            // If cooldown has passed AND rolls are NOT used up, ensure rolls are reset and cooldown is cleared
-            resetRolls(); // This covers the initial load case where rollsUsed might be 0 but cooldownEndTime is old
         }
-
+        // If cooldown has expired (cooldownEndTime <= now) AND rolls are NOT at max (and some were used),
+        // This is the state where rolls should be available. Ensure they are reset.
+        else if (cooldownEndTime <= now && rollsUsed < MAX_ROLLS_PER_HOUR && rollsUsed > 0) {
+            resetRolls(); // This will set rollsUsed to 0 and cooldownEndTime to 0
+        }
 
         // Clear any existing interval to prevent multiple timers running
         clearInterval(timerInterval);
@@ -242,7 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateRollsDisplay(); // Initial display update
     }
-
 
     function resetRolls() {
         rollsUsed = 0;
@@ -298,7 +296,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (rollsUsed >= MAX_ROLLS_PER_HOUR) {
             manageCooldown(); // This will start cooldown if it's not already running
         }
-
 
         // Simulate rolling time
         await new Promise(resolve => setTimeout(resolve, 2000));
